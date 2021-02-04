@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Sample.Azure.Translator.App": {
+      "commandName": "Project",
+        "environmentVariables": {
+            "DOTNET_Environment": "Development"      
+        }
+    }
+  }
+}

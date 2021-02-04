@@ -1,8 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 15.0.26124.0
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Azure.Translator.App", "src\Sample.Azure.Translator.App\Sample.Azure.Translator.App.csproj", "{6FDEBE24-801C-4E6A-9648-3283EF86E958}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,7 +14,24 @@ Global
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Debug|x64.Build.0 = Debug|Any CPU
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Debug|x86.Build.0 = Debug|Any CPU
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Release|x64.ActiveCfg = Release|Any CPU
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Release|x64.Build.0 = Release|Any CPU
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Release|x86.ActiveCfg = Release|Any CPU
+		{6FDEBE24-801C-4E6A-9648-3283EF86E958}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1A875091-AB9E-488E-9B7C-450B1E0EDC20}
 	EndGlobalSection
 EndGlobal
