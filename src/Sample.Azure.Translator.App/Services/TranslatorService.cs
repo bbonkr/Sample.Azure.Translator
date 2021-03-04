@@ -163,15 +163,16 @@ namespace Sample.Azure.Translator.App.Services
                 errorMessage.Add("The array can have at most 100 elements.");
             }
 
-            foreach (var input in model.Inputs)
-            {
-                var contentLength = input.Text.Length; // Encoding.UTF8.GetBytes(input.Text).Length;
-                if (contentLength > 10000)
-                {
-                    errorMessage.Add("The entire text included in the request cannot exceed 10,000 characters including spaces.");
-                    break;
-                }
-            }
+            // TODO Uncomment after verify
+            //foreach (var input in model.Inputs)
+            //{
+            //    var contentLength = input.Text.Length; // Encoding.UTF8.GetBytes(input.Text).Length;
+            //    if (contentLength > 10000)
+            //    {
+            //        errorMessage.Add("The entire text included in the request cannot exceed 10,000 characters including spaces.");
+            //        break;
+            //    }
+            //}
 
             if (errorMessage.Count > 0)
             {
