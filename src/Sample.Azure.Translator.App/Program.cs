@@ -30,15 +30,58 @@ namespace Sample.Azure.Translator.App
         private static async Task RunProcess(IHost host, string[] args)
         {
             var text = string.Empty;
+            var html = false;
+            var from = string.Empty;
+            var to = string.Empty;
+            var toLanguages = new[] { "en", "ru", "ja" };
 
             // code here
-            if(args.Length > 0)
+            foreach (var arg in args)
             {
-                var localFileService = host.Services.GetRequiredService<ILocalFileService>();
-
-                if (localFileService.Exists(args[0]))
+                if (arg.StartsWith("--"))
                 {
-                    text = await localFileService.ReadAsync(args[0]);
+                    if(arg == "--html")
+                    {
+                        html = true;
+                    }
+
+                    if (arg.StartsWith("--from"))
+                    {
+                        var tokens = arg.Split('=');
+                        if(tokens.Length > 1)
+                        {
+                            from = tokens[1];
+                        }
+                    }
+
+                    if (arg.StartsWith("--to"))
+                    {
+                        var tokens = arg.Split('=');
+                        if (tokens.Length > 1)
+                        {
+                            var temp = tokens[1];
+                            var tempTokens = temp.Split(',');
+
+                            if(tempTokens.Length > 0)
+                            {
+                                toLanguages = tempTokens;
+                            }
+
+                        }
+                    }
+                }
+                else
+                {
+                    var localFileService = host.Services.GetRequiredService<ILocalFileService>();
+                    var environment = host.Services.GetRequiredService<IHostEnvironment>();
+                    var filePath = Path.GetFullPath(arg, environment.ContentRootPath);
+
+                    //Console.WriteLine($"File: {filePath}");
+
+                    if (localFileService.Exists(filePath))
+                    {
+                        text = await localFileService.ReadAsync(filePath);
+                    }
                 }
             }
 
@@ -63,7 +106,9 @@ namespace Sample.Azure.Translator.App
                 {
                     new TranslationRequestInputModel(text),
                 },
-                TranslateToLanguages = new string[] { "en", "ru", "ja" },
+                ToLanguages = toLanguages,
+                FromLanguage = from,
+                TextType = html ? TextTypes.Html : TextTypes.Plain,
             };
 
             try
@@ -135,9 +180,14 @@ namespace Sample.Azure.Translator.App
     {
         public static string ToJson<T>(this T obj, JsonSerializerOptions options = null)
         {
+            
+
             var actualOptions = options ?? new JsonSerializerOptions { 
                 WriteIndented = true,
-                Encoder = JavaScriptEncoder.Create(UnicodeRanges.All, UnicodeRanges.Cyrillic),
+                //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All, UnicodeRanges.Cyrillic),
+                // ! Caution
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+
             };
 
             return JsonSerializer.Serialize<T>(obj, actualOptions);

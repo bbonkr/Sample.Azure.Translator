@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -33,6 +34,11 @@ namespace Sample.Azure.Translator.App.Services
         }
 
         public bool Exists(string filePath) => File.Exists(filePath);
+        //{
+        //    var path = Path.GetFullPath(filePath, Directory.GetCurrentDirectory());
+
+        //    return File.Exists(filePath);
+        //}
 
         private ILogger logger;
     }
