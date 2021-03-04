@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -15,7 +16,7 @@ namespace Sample.Azure.Translator.App.Services
 {
     public interface ITranslatorService
     {
-        Task<TranslationResultModel[]> TranslateAsync(TranslationRequestModel model);
+        Task<ResponseModel<TranslationResultModel[]>> TranslateAsync(TranslationRequestModel model);
     }
 
     public class TranslatorService : ITranslatorService
@@ -33,38 +34,53 @@ namespace Sample.Azure.Translator.App.Services
             logger = loggerFactory.CreateLogger<TranslatorService>();
         }
 
-        public async Task<TranslationResultModel[]> TranslateAsync(TranslationRequestModel model)
+        public async Task<ResponseModel<TranslationResultModel[]>> TranslateAsync(TranslationRequestModel model)
         {
             ValidateAzureTranslateConnectionOptions();
+            ValidateRequestbody(model);
 
             var requestBody = model.Inputs.ToJson();
 
             using (var client = new HttpClient())
             {
-                using(var request = new HttpRequestMessage())
+                using (var request = new HttpRequestMessage())
                 {
                     request.Method = HttpMethod.Post;
-                    request.RequestUri = getRequestUri(model.TranslateToLanguages);
-                    request.Content = new StringContent(requestBody, Encoding.UTF8, CONTENT_TYPE_VALUE);
+                    request.RequestUri = getRequestUri(model);
+
                     request.Headers.Add(OCP_APIM_SUBSCRIPTION_KEY, azureTranslatorConnectionOptions.SubscriptionKey);
                     request.Headers.Add(OCP_APIM_SUBSCRIPTION_REGION, azureTranslatorConnectionOptions.Region);
-                    //request.Headers.Add(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE);
+                    
+                    request.Content = new StringContent(requestBody, Encoding.UTF8, CONTENT_TYPE_VALUE);
+                    request.Content.Headers.ContentLength = Encoding.UTF8.GetBytes(requestBody).Length;
+                    
 
-                    var response = await client.SendAsync(request);//.ConfigureAwait(false);
-
+                    var response = await client.SendAsync(request);
+                    
                     var result = await response.Content.ReadAsStringAsync();
-
-                    var resultModel = JsonSerializer.Deserialize<TranslationResultModel[]>(result, new JsonSerializerOptions
+                    var jsonSerializerOptions = new JsonSerializerOptions
                     {
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    });
+                    };
 
-                    return resultModel;
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var resultModel = JsonSerializer.Deserialize<TranslationResultModel[]>(result, jsonSerializerOptions);
+
+
+                        return ResponseModelFactory.Create(HttpStatusCode.OK, string.Empty, resultModel);
+                    }
+                    else
+                    {
+                        var resultModel = JsonSerializer.Deserialize<ErrorResponseModel>(result, jsonSerializerOptions);
+
+                        return ResponseModelFactory.Create<TranslationResultModel[]>(response.StatusCode, resultModel.Error?.Message, null);
+                    }
                 }
             }
         }
 
-        private Uri getRequestUri(string[] translateToLanguages)
+        private Uri getRequestUri(TranslationRequestModel model)
         {
             var endpoint = azureTranslatorConnectionOptions.Endpoint;
             if (endpoint.EndsWith("/"))
@@ -72,9 +88,36 @@ namespace Sample.Azure.Translator.App.Services
                 endpoint = endpoint.Substring(0, endpoint.Length - 1);
             }
 
-            var requestUri= new Uri($"{endpoint}{TRANSLATOR_ROUTE}&to={String.Join("&to=", translateToLanguages)}");
+            var url = $"{endpoint}{TRANSLATOR_ROUTE}&to={String.Join("&to=", model.ToLanguages)}";
 
-            logger.LogInformation($"Request uri: {requestUri.ToString()}");
+            if (!String.IsNullOrWhiteSpace(model.FromLanguage))
+            {
+                url = $"{url}&from={model.FromLanguage}";
+            }
+
+            if (!String.IsNullOrWhiteSpace(model.TextType) && !model.TextType.Equals(TextTypes.Plain, StringComparison.OrdinalIgnoreCase))
+            {
+                url = $"{url}&textType={model.TextType}";
+            }
+
+            if (!String.IsNullOrWhiteSpace(model.Category) && !model.Category.Equals(Categories.General, StringComparison.OrdinalIgnoreCase))
+            {
+                url = $"{url}&category={model.Category}";
+            }
+
+            if (!String.IsNullOrWhiteSpace(model.ProfanityAction) && !model.ProfanityAction.Equals(ProfanityActions.NoAction, StringComparison.OrdinalIgnoreCase))
+            {
+                url = $"{url}&profanityAction={model.ProfanityAction}";
+
+                if (!String.IsNullOrWhiteSpace(model.ProfanityMarker) && !model.ProfanityMarker.Equals(ProfanityMarkers.Asterisk, StringComparison.OrdinalIgnoreCase))
+                {
+                    url = $"{url}&profanityMarker={model.ProfanityMarker}";
+                }
+            }
+
+            var requestUri = new Uri(url);
+
+            //logger.LogInformation($"Request uri: {requestUri.ToString()}");
 
             return requestUri;
         }
@@ -103,6 +146,39 @@ namespace Sample.Azure.Translator.App.Services
                 throw new OptionsValidationException(AzureTranslatorConnectionOptions.Name, typeof(AzureTranslatorConnectionOptions), errorMessage.ToArray());
             }
         }
+
+        private void ValidateRequestbody(TranslationRequestModel model)
+        {
+            var errorMessage = new List<string>();
+
+            var inputsCount = model.Inputs.Count();
+
+            if (inputsCount == 0)
+            {
+                errorMessage.Add("Text to translate is required.");
+            }
+
+            if (inputsCount > 100)
+            {
+                errorMessage.Add("The array can have at most 100 elements.");
+            }
+
+            foreach (var input in model.Inputs)
+            {
+                var contentLength = input.Text.Length; // Encoding.UTF8.GetBytes(input.Text).Length;
+                if (contentLength > 10000)
+                {
+                    errorMessage.Add("The entire text included in the request cannot exceed 10,000 characters including spaces.");
+                    break;
+                }
+            }
+
+            if (errorMessage.Count > 0)
+            {
+                throw new InvalidRequestException(string.Join($"{Environment.NewLine}- ", errorMessage.ToArray()));
+            }
+        }
+
 
         private readonly AzureTranslatorConnectionOptions azureTranslatorConnectionOptions;
         private readonly ILogger logger;
