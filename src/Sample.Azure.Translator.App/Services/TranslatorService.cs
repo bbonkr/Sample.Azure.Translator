@@ -16,11 +16,13 @@ namespace Sample.Azure.Translator.App.Services
 {
     public interface ITranslatorService
     {
-        Task<ResponseModel<TranslationResultModel[]>> TranslateAsync(TranslationRequestModel model);
+        Task<IEnumerable<TranslationResultModel>> TranslateAsync(TranslationRequestModel model);
     }
 
     public class TranslatorService : ITranslatorService
     {
+        private const string TAG = "[Azure Translator Service]";
+
         public const string TRANSLATOR_ROUTE = "/translate?api-version=3.0";
         public const string OCP_APIM_SUBSCRIPTION_KEY = "Ocp-Apim-Subscription-Key";
         public const string OCP_APIM_SUBSCRIPTION_REGION = "Ocp-Apim-Subscription-Region";
@@ -34,53 +36,102 @@ namespace Sample.Azure.Translator.App.Services
             logger = loggerFactory.CreateLogger<TranslatorService>();
         }
 
-        public async Task<ResponseModel<TranslationResultModel[]>> TranslateAsync(TranslationRequestModel model)
+        public async Task<IEnumerable<TranslationResultModel>> TranslateAsync(TranslationRequestModel model)
         {
             ValidateAzureTranslateConnectionOptions();
             ValidateRequestbody(model);
+
+            List<TranslationResultModel> resultSet = null;
 
             var requestBody = model.Inputs.ToJson();
 
             using (var client = new HttpClient())
             {
-                using (var request = new HttpRequestMessage())
+                foreach (var uri in getRequestUri(model))
                 {
-                    request.Method = HttpMethod.Post;
-                    request.RequestUri = getRequestUri(model);
-
-                    request.Headers.Add(OCP_APIM_SUBSCRIPTION_KEY, azureTranslatorConnectionOptions.SubscriptionKey);
-                    request.Headers.Add(OCP_APIM_SUBSCRIPTION_REGION, azureTranslatorConnectionOptions.Region);
-                    
-                    request.Content = new StringContent(requestBody, Encoding.UTF8, CONTENT_TYPE_VALUE);
-                    request.Content.Headers.ContentLength = Encoding.UTF8.GetBytes(requestBody).Length;
-                    
-
-                    var response = await client.SendAsync(request);
-                    
-                    var result = await response.Content.ReadAsStringAsync();
-                    var jsonSerializerOptions = new JsonSerializerOptions
+                    using (var request = new HttpRequestMessage())
                     {
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    };
+                        request.Method = HttpMethod.Post;
+                        request.RequestUri = uri;
 
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var resultModel = JsonSerializer.Deserialize<TranslationResultModel[]>(result, jsonSerializerOptions);
+                        request.Headers.Add(OCP_APIM_SUBSCRIPTION_KEY, azureTranslatorConnectionOptions.SubscriptionKey);
+                        request.Headers.Add(OCP_APIM_SUBSCRIPTION_REGION, azureTranslatorConnectionOptions.Region);
 
+                        request.Content = new StringContent(requestBody, Encoding.UTF8, CONTENT_TYPE_VALUE);
 
-                        return ResponseModelFactory.Create(HttpStatusCode.OK, string.Empty, resultModel);
-                    }
-                    else
-                    {
-                        var resultModel = JsonSerializer.Deserialize<ErrorResponseModel>(result, jsonSerializerOptions);
+                        var response = await client.SendAsync(request);
 
-                        return ResponseModelFactory.Create<TranslationResultModel[]>(response.StatusCode, resultModel.Error?.Message, null);
+                        if (response.Content == null)
+                        {
+                            throw new Exception($"{TAG} Response content is empty.");
+                        }
+
+                        var resultJson = await response.Content.ReadAsStringAsync();
+
+                        var jsonSerializerOptions = new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        };
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var resultModel = JsonSerializer.Deserialize<IEnumerable<TranslationResultModel>>(resultJson, jsonSerializerOptions);
+
+                            logger.LogInformation($"${TAG} The request has been processed. => Translated.");
+
+                            if (resultSet == null)
+                            {
+                                resultSet = new List<TranslationResultModel>(resultModel);
+                            }
+                            else
+                            {
+                                var resultModelIndex = 0;
+                                resultModel.ToList().ForEach((result) =>
+                                {
+                                    var list = resultSet[resultModelIndex].Translations.ToList();
+                                    result.Translations.ToList().ForEach((translation) =>
+                                    {
+
+                                        list.Add(translation);
+
+                                    });
+
+                                    resultSet[resultModelIndex].Translations = list;
+                                    resultModelIndex++;
+                                });
+                            }
+                        }
+                        else
+                        {
+                            var resultModel = JsonSerializer.Deserialize<TranslationErrorResultModel>(resultJson, jsonSerializerOptions);
+
+                            logger.LogInformation($"${TAG} The request does not has been processed. => Not  Translated.");
+
+                            throw new SomethingWrongException<TranslationErrorResultModel>(resultModel.Error.Message, resultModel);
+                        }
                     }
                 }
             }
+
+            return resultSet;
         }
 
-        private Uri getRequestUri(TranslationRequestModel model)
+        private IEnumerable<Uri> getRequestUri(TranslationRequestModel model)
+        {
+            if (model.IsTranslationEachLanguage)
+            {
+                foreach (var language in model.ToLanguages)
+                {
+                    yield return getRequestUri(model, language);
+                }
+            }
+            else
+            {
+                yield return getRequestUri(model, string.Empty);
+            }
+        }
+
+        private Uri getRequestUri(TranslationRequestModel model, string languageCode = "")
         {
             var endpoint = azureTranslatorConnectionOptions.Endpoint;
             if (endpoint.EndsWith("/"))
@@ -88,7 +139,16 @@ namespace Sample.Azure.Translator.App.Services
                 endpoint = endpoint.Substring(0, endpoint.Length - 1);
             }
 
-            var url = $"{endpoint}{TRANSLATOR_ROUTE}&to={String.Join("&to=", model.ToLanguages)}";
+            var url = $"{endpoint}{TRANSLATOR_ROUTE}";
+
+            if (string.IsNullOrWhiteSpace(languageCode))
+            {
+                url = $"{url}&to={String.Join("&to=", model.ToLanguages)}";
+            }
+            else
+            {
+                url = $"{url}&to={languageCode}";
+            }
 
             if (!String.IsNullOrWhiteSpace(model.FromLanguage))
             {
@@ -117,7 +177,7 @@ namespace Sample.Azure.Translator.App.Services
 
             var requestUri = new Uri(url);
 
-            //logger.LogInformation($"Request uri: {requestUri.ToString()}");
+            //logger.LogInformation($"{TAG} Request uri: {requestUri.ToString()}");
 
             return requestUri;
         }
@@ -143,6 +203,7 @@ namespace Sample.Azure.Translator.App.Services
 
             if (errorMessage.Count > 0)
             {
+                logger.LogInformation($"{TAG} {nameof(AzureTranslatorConnectionOptions)} is invalid.");
                 throw new OptionsValidationException(AzureTranslatorConnectionOptions.Name, typeof(AzureTranslatorConnectionOptions), errorMessage.ToArray());
             }
         }
@@ -163,20 +224,26 @@ namespace Sample.Azure.Translator.App.Services
                 errorMessage.Add("The array can have at most 100 elements.");
             }
 
-            // TODO Uncomment after verify
-            //foreach (var input in model.Inputs)
-            //{
-            //    var contentLength = input.Text.Length; // Encoding.UTF8.GetBytes(input.Text).Length;
-            //    if (contentLength > 10000)
-            //    {
-            //        errorMessage.Add("The entire text included in the request cannot exceed 10,000 characters including spaces.");
-            //        break;
-            //    }
-            //}
+            foreach (var input in model.Inputs)
+            {
+                // https://docs.microsoft.com/en-us/azure/cognitive-services/translator/request-limits#character-and-array-limits-per-request
+                // Max 10,000 characters. 
+                // Request to translate (+1) and Response to be translated ( + count of to translate languages)
+                var contentLength = input.Text.Length * ((model.IsTranslationEachLanguage ? 1 : model.ToLanguages.Count()) + 1);
+
+                logger.LogInformation($"{TAG} Calculated characters={contentLength}");
+
+                if (contentLength > 10000)
+                {
+                    errorMessage.Add("The entire text included in the request cannot exceed 10,000 characters including spaces.");
+                    break;
+                }
+            }
 
             if (errorMessage.Count > 0)
             {
-                throw new InvalidRequestException(string.Join($"{Environment.NewLine}- ", errorMessage.ToArray()));
+                logger.LogInformation($"{TAG} Request body is invalid.");
+                throw new InvalidRequestException<IEnumerable<string>>("Request body is invalid.", errorMessage.ToArray());
             }
         }
 

@@ -1,11 +1,18 @@
 {
-  "profiles": {
-    "Sample.Azure.Translator.App": {
-        "commandName": "Project",
-        "environmentVariables": {
-            "DOTNET_Environment": "Development"
+    "profiles": {
+        "Translate simple text": {
+            "commandName": "Project",
+            "environmentVariables": {
+                "DOTNET_Environment": "Development"
+            },
+            "commandLineArgs": "--from=ko --to=en,es,ja,ru --each-language"
         },
-        "commandLineArgs": "D:\\repos\\Sample.Azure.Translator\\samples\\sample.html --html --from=en --to=ko,es,ja,ru"
+        "Translate sample html file": {
+            "commandName": "Project",
+            "environmentVariables": {
+                "DOTNET_Environment": "Development"
+            },
+            "commandLineArgs": "../../../../../samples/sample.html --html --from=ko --to=en,es,ja,ru --each-language"
+        }
     }
-  }
 }

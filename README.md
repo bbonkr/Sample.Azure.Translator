@@ -35,9 +35,10 @@ Sample app translate input text or file to en, ru, ja.
 
 ### Arguments
 
+- `--to=<string>`: (required) Languages to translate. Comma separated string. e.g.) --to=en,ko,ja
 - `--from=<string>`: (optional) Input text language.
-- `--to=<string>`: string (required) Languages to translate. Comma separated string. e.g.) --to=en,ko,ja
-- `--html`: Input text is html.
+- `--html`: (optional) Input text is html.
+- `--each-language`: (optional) Request to translate each language
 
 ### Use text file
 
