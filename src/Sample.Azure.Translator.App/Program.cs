@@ -32,20 +32,25 @@ namespace Sample.Azure.Translator.App
             var text = string.Empty;
             var html = false;
             var from = string.Empty;
-            var to = string.Empty;
+            var isTranslationEachLanguage = false;
             var toLanguages = new[] { "en", "ru", "ja" };
 
             // code here
             foreach (var arg in args)
             {
-                if (arg.StartsWith("--"))
+                if (arg.Trim().StartsWith("--"))
                 {
-                    if(arg == "--html")
+                    if (arg.Trim().Equals("--html", StringComparison.OrdinalIgnoreCase))
                     {
                         html = true;
                     }
 
-                    if (arg.StartsWith("--from"))
+                    if(arg.Trim().Equals( "--each-language", StringComparison.OrdinalIgnoreCase))
+                    {
+                        isTranslationEachLanguage = true;
+                    }
+
+                    if (arg.Trim().StartsWith("--from", StringComparison.OrdinalIgnoreCase))
                     {
                         var tokens = arg.Split('=');
                         if(tokens.Length > 1)
@@ -54,7 +59,7 @@ namespace Sample.Azure.Translator.App
                         }
                     }
 
-                    if (arg.StartsWith("--to"))
+                    if (arg.Trim().StartsWith("--to", StringComparison.OrdinalIgnoreCase))
                     {
                         var tokens = arg.Split('=');
                         if (tokens.Length > 1)
@@ -109,6 +114,7 @@ namespace Sample.Azure.Translator.App
                 ToLanguages = toLanguages,
                 FromLanguage = from,
                 TextType = html ? TextTypes.Html : TextTypes.Plain,
+                IsTranslationEachLanguage = isTranslationEachLanguage,
             };
 
             try
@@ -117,9 +123,19 @@ namespace Sample.Azure.Translator.App
 
                 Console.WriteLine($"Result: {result.ToJson()}");
             }
+            catch(InvalidRequestException ex)
+            {
+                Console.WriteLine($"Exception: {ex.Message}");
+                Console.WriteLine(ex.GetDetails().ToJson());
+            }
+            catch(SomethingWrongException ex)
+            {
+                Console.WriteLine($"Exception: {ex.Message} ");
+                Console.WriteLine(ex.GetDetails().ToJson());
+            }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine($"Exception: {ex.Message}");
             }
          
         }

@@ -73,6 +73,12 @@ namespace Sample.Azure.Translator.App.Models
         /// <see cref="ProfanityMarkers"/>
         /// </summary>
         public string ProfanityMarker { get; init; } = ProfanityMarkers.Asterisk;
+
+        /// <summary>
+        /// If true, request translate each language, otherwise request at one time.
+        /// <para>각 언어별 변역 요청 여부를 나타냅니다.</para>
+        /// </summary>
+        public bool IsTranslationEachLanguage { get; init; } = false;
     }
 
     public class TranslationResultModel
@@ -80,7 +86,7 @@ namespace Sample.Azure.Translator.App.Models
         public DetectedLanguage DetectedLanguage { get; set; }
         public TextResult SourceText { get; set; }
 
-        public Translation[] Translations { get; set; }
+        public IEnumerable<Translation> Translations { get; set; }
     }
 
     public class DetectedLanguage
@@ -114,9 +120,9 @@ namespace Sample.Azure.Translator.App.Models
 
     public class SentenceLength
     {
-        public int[] SrcSentLen { get; set; }
+        public IEnumerable<int> SrcSentLen { get; set; }
 
-        public int[] TransSentLen { get; set; }
+        public IEnumerable<int> TransSentLen { get; set; }
     }
 
     public class TextTypes
@@ -143,15 +149,5 @@ namespace Sample.Azure.Translator.App.Models
         public const string Tag = "Tag";
     }
 
-    public class ErrorResponseModel
-    {
-        public ErrorModel Error { get; init; }
-    }
 
-    public class ErrorModel
-    {
-        public int Code { get; init; }
-
-        public string Message { get; init; }
-    }
 }
