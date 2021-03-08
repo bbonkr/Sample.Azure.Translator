@@ -1,4 +1,4 @@
-﻿namespace Sample.Azure.Translator.App.Models
+﻿namespace Sample.Azure.Translator.Models
 {
     public class TranslationErrorResultModel
     {

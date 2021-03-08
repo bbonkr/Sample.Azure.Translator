@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sample.Azure.Translator.App
+namespace Sample.Azure.Translator.Services
 {
     public class AzureTranslatorConnectionOptions
     {

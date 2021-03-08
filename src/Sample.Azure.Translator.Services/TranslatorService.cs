@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-using Sample.Azure.Translator.App.Models;
+using Sample.Azure.Translator.Models;
 
-namespace Sample.Azure.Translator.App.Services
+namespace Sample.Azure.Translator.Services
 {
     public interface ITranslatorService
     {

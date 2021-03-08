@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Sample.Azure.Translator.App
+namespace Sample.Azure.Translator
 {
     public abstract class InvalidRequestException : Exception
     {

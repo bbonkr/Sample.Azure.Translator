@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sample.Azure.Translator.App.Models
+namespace Sample.Azure.Translator.Models
 {
     /// <summary>
     /// The string to translate.
