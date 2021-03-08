@@ -7,9 +7,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Sample.Azure.Translator.Webapp.Controllers
 {
+    [ApiVersion("1.0")]
     [ApiController]
-    [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    [Area("api")]
+    [Route("[area]/v{version:apiVersion}/[controller]")]
+    public class WeatherForecastController : ApiControllerBase
     {
         private static readonly string[] Summaries = new[]
         {
