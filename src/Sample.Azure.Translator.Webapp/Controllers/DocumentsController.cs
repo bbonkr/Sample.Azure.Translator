@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Sample.Azure.Translator.Models;
 using Sample.Azure.Translator.Services;
 using Sample.Azure.Translator.Services.Models;
+using Sample.Azure.Translator.Services.Strategies;
 using Sample.Azure.Translator.Webapp.Models;
 
 namespace Sample.Azure.Translator.Webapp.Controllers
@@ -23,10 +24,37 @@ namespace Sample.Azure.Translator.Webapp.Controllers
     {
         public DocumentsController(
             IStorageService<TranslateAzureBlobStorageContainer> storageService,
+            IDocumentTranslationService documentTranslationService,
+            ITranslatedDocumentNamingStrategy documentNamingStrategy,
             ILoggerFactory loggerFactory)
         {
             this.storageService = storageService;
+            this.documentNamingStrategy = documentNamingStrategy;
+            this.documentTranslationService = documentTranslationService;
             logger = loggerFactory.CreateLogger<DocumentsController>();
+        }
+
+
+        [HttpGet]
+        [Route("{name}")]
+        public async Task<IActionResult> FindByIdAsync(string name)
+        {
+            try
+            {
+                var result = await storageService.FindByNameAsync(name);
+
+                return StatusCode(HttpStatusCode.OK, result);
+            }
+            catch (HttpStatusException ex)
+            {
+                return StatusCode(ex.StatusCode, ex.Message, ex.GetDetails());
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+
+                return StatusCode(HttpStatusCode.InternalServerError, ex.Message);
+            }
         }
 
         [HttpPost]
@@ -108,7 +136,65 @@ namespace Sample.Azure.Translator.Webapp.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("translate")]
+        public async Task<IActionResult> TranslateAsync(Documents.TranslateRequestModel model)
+        {
+            var message = "";
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    message = "Request body is invalid.";
+                    throw new HttpStatusException<ErrorModel>(HttpStatusCode.BadRequest, message, new ErrorModel
+                    {
+                        Code = (int)HttpStatusCode.BadRequest,
+                        Message = message,
+                    });
+                }
+
+                var result = await storageService.FindByNameAsync(model.Name);
+
+                var documentTranslationRequestModel = new DocumentTranslationRequestModel
+                {
+                    Inputs = new DocumentTranslationBatchRequest[]
+                    {
+                        new DocumentTranslationBatchRequest
+                        {
+                             Source = new DocumentTranslationSourceInput
+                             {
+                                SourceUrl = storageService.GenerateSasUri(model.Name), //new Uri(result.Uri).AbsoluteUri,
+                                Language = model.CriteriaLanguage,
+                             },
+                             StorageType =  DocumentTranslationStorageInputTypes.File,
+                             Targets = model.TargetLanguages.Select(language =>   new DocumentTranslationTargetInput
+                                {
+                                    Language =language,
+                                    TargetUrl =storageService.GenerateSasUri( documentNamingStrategy.GetTranslatedDocumentName(result.Uri,language )),
+                                }),
+                        },
+                    },
+                };
+
+                var translationRequestResult = await documentTranslationService.RequestTranslation(documentTranslationRequestModel);
+
+                return StatusCode(HttpStatusCode.Accepted, translationRequestResult);
+            }
+            catch (HttpStatusException ex)
+            {
+                return StatusCode(ex.StatusCode, ex.Message, ex.GetDetails());
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+
+                return StatusCode(HttpStatusCode.InternalServerError, ex.Message);
+            }
+        }
+
         private readonly IStorageService<TranslateAzureBlobStorageContainer> storageService;
+        private readonly IDocumentTranslationService documentTranslationService;
+        private readonly ITranslatedDocumentNamingStrategy documentNamingStrategy;
         private readonly ILogger logger;
     }
 }

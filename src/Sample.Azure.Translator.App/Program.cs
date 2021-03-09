@@ -103,13 +103,13 @@ namespace Sample.Azure.Translator.App
                 while (string.IsNullOrWhiteSpace(text));
             }
 
-            var translatorService = host.Services.GetRequiredService<ITranslatorService>();
+            var translatorService = host.Services.GetRequiredService<ITextTranslatorService>();
 
-            var source = new TranslationRequestModel
+            var source = new TextTranslatorRequestModel
             {
-                Inputs = new TranslationRequestInputModel[]
+                Inputs = new TextTranslatorRequestInputModel[]
                 {
-                    new TranslationRequestInputModel(text),
+                    new TextTranslatorRequestInputModel(text),
                 },
                 ToLanguages = toLanguages,
                 FromLanguage = from,
@@ -144,7 +144,7 @@ namespace Sample.Azure.Translator.App
         {
             // DI here
             services.AddTransient<ILocalFileService, LocalFileService>();
-            services.AddTransient<ITranslatorService, TranslatorService>();
+            services.AddTransient<ITextTranslatorService, TextTranslatorService>();
 
             return services;
         }

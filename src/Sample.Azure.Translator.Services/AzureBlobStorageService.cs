@@ -21,11 +21,16 @@ namespace Sample.Azure.Translator.Services
 {
     public interface IStorageService<T>
     {
+        Task<BlobCreateResultModel> FindByNameAsync(string name, CancellationToken cancellationToken = default);
+
         Task<BlobCreateResultModel> CreateAsync(string name, Stream stream, string contentType, CancellationToken cancellationToken = default);
 
         Task<BlobCreateResultModel> CreateAsync(string name, string contents, string contentType, CancellationToken cancellationToken = default);
 
+
         Task<bool> DeleteAsync(string name, CancellationToken cancellationToken = default);
+
+        string GenerateSasUri(string name, string storedPolicyName = "");
     }
 
    
@@ -38,6 +43,85 @@ namespace Sample.Azure.Translator.Services
 
             var container = Activator.CreateInstance<T>();
             this.client = new BlobContainerClient(options.ConnectionString, container.GetContainerName());
+        }
+
+        public async Task<BlobCreateResultModel> FindByNameAsync(string name, CancellationToken cancellationToken = default)
+        {
+            var message = "";
+            try
+            {
+                EnsureContainerCreated();
+
+                var blobClient = client.GetBlobClient(name);
+
+                var exists = await blobClient.ExistsAsync(cancellationToken);
+
+                if (exists)
+                {
+                    var result = new BlobCreateResultModel
+                    {
+                        BlobName = blobClient.Name,
+                        Uri = blobClient.Uri.ToString(),
+                        ContainerName = blobClient.BlobContainerName,
+                    };
+
+                    return result;
+                }
+                else
+                {
+                    message = "Could not find a file.";
+                    throw new HttpStatusException<ErrorModel>(HttpStatusCode.NotFound, message, new ErrorModel
+                    {
+                        Code = (int)HttpStatusCode.NotFound,
+                        Message = message,
+                    });
+                }
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+
+                throw;
+            }
+        }
+
+        public string GenerateSasUri(string name, string storedPolicyName = "")
+        {
+            var message = "";
+            var blobClient = client.GetBlobClient(name);
+
+            if (!client.CanGenerateSasUri || !blobClient.CanGenerateSasUri)
+            {
+                message = "Could not generate the SAS uri.";
+                throw new HttpStatusException<ErrorModel>(HttpStatusCode.BadRequest, message, new ErrorModel
+                {
+                    Code = (int)HttpStatusCode.NotAcceptable,
+                    Message = message,
+                });
+            }
+
+            var builder = new BlobSasBuilder()
+            {
+                BlobContainerName = client.Name,
+                BlobName = name,
+                Resource = "b",
+            };
+
+
+            if (string.IsNullOrWhiteSpace(storedPolicyName))
+            {
+                builder.ExpiresOn = DateTimeOffset.UtcNow.AddHours(1);
+                builder.SetPermissions(BlobSasPermissions.Read | BlobSasPermissions.Write);
+            }
+            else
+            {
+                builder.Identifier = storedPolicyName;
+            }
+
+            var sasUri = blobClient.GenerateSasUri(builder);
+
+            return sasUri.ToString();
         }
 
         public async Task<BlobCreateResultModel> CreateAsync(string name, Stream stream, string contentType = "", CancellationToken cancellationToken = default)

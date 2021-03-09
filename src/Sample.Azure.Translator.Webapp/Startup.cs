@@ -17,6 +17,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
 using Sample.Azure.Translator.Services;
+using Sample.Azure.Translator.Services.Strategies;
 
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -38,6 +39,10 @@ namespace Sample.Azure.Translator.Webapp
             services.Configure<AzureStorageOptions>(Configuration.GetSection(AzureStorageOptions.Name));
 
             services.AddTransient<IStorageService<TranslateAzureBlobStorageContainer>, AzureBlobStorageService<TranslateAzureBlobStorageContainer>>();
+            services.AddTransient<ITextTranslatorService, TextTranslatorService>();
+            services.AddTransient<IDocumentTranslationService, DocumentTranslationService>();
+
+            services.AddTransient<ITranslatedDocumentNamingStrategy, TranslatedDocumentNamingStrategy>();
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
             var defaultVersion = new ApiVersion(1, 0);

@@ -14,34 +14,30 @@ using Sample.Azure.Translator.Models;
 
 namespace Sample.Azure.Translator.Services
 {
-    public interface ITranslatorService
+    public interface ITextTranslatorService
     {
-        Task<IEnumerable<TranslationResultModel>> TranslateAsync(TranslationRequestModel model);
+        Task<IEnumerable<TextTranslatorResultModel>> TranslateAsync(TextTranslatorRequestModel model);
     }
 
-    public class TranslatorService : ITranslatorService
+    public class TextTranslatorService : TranslatorServiceBase, ITextTranslatorService
     {
-        private const string TAG = "[Azure Translator Service]";
+        protected override string Tag { get => "[Azure Translator: Text]"; }
+        protected override string Route { get => "/translate?api-version=3.0"; }
 
-        public const string TRANSLATOR_ROUTE = "/translate?api-version=3.0";
-        public const string OCP_APIM_SUBSCRIPTION_KEY = "Ocp-Apim-Subscription-Key";
-        public const string OCP_APIM_SUBSCRIPTION_REGION = "Ocp-Apim-Subscription-Region";
-        public const string CONTENT_TYPE_KEY = "Content-Type";
-        public const string CONTENT_TYPE_VALUE = "application/json";
-
-
-        public TranslatorService(IOptions<AzureTranslatorConnectionOptions> azureTranslatorConnectionOptionsAccessor, ILoggerFactory loggerFactory) 
+        public TextTranslatorService(
+            IOptionsMonitor<AzureTranslatorConnectionOptions> azureTranslatorConnectionOptionsAccessor, 
+            ILoggerFactory loggerFactory)
+            : base(azureTranslatorConnectionOptionsAccessor)
         {
-            azureTranslatorConnectionOptions = azureTranslatorConnectionOptionsAccessor.Value;
-            logger = loggerFactory.CreateLogger<TranslatorService>();
+            logger = loggerFactory.CreateLogger<TextTranslatorService>();
         }
 
-        public async Task<IEnumerable<TranslationResultModel>> TranslateAsync(TranslationRequestModel model)
+        public async Task<IEnumerable<TextTranslatorResultModel>> TranslateAsync(TextTranslatorRequestModel model)
         {
             ValidateAzureTranslateConnectionOptions();
             ValidateRequestbody(model);
 
-            List<TranslationResultModel> resultSet = null;
+            List<TextTranslatorResultModel> resultSet = null;
 
             var requestBody = model.Inputs.ToJson();
 
@@ -54,8 +50,8 @@ namespace Sample.Azure.Translator.Services
                         request.Method = HttpMethod.Post;
                         request.RequestUri = uri;
 
-                        request.Headers.Add(OCP_APIM_SUBSCRIPTION_KEY, azureTranslatorConnectionOptions.SubscriptionKey);
-                        request.Headers.Add(OCP_APIM_SUBSCRIPTION_REGION, azureTranslatorConnectionOptions.Region);
+                        request.Headers.Add(OCP_APIM_SUBSCRIPTION_KEY, options.SubscriptionKey);
+                        request.Headers.Add(OCP_APIM_SUBSCRIPTION_REGION, options.Region);
 
                         request.Content = new StringContent(requestBody, Encoding.UTF8, CONTENT_TYPE_VALUE);
 
@@ -63,7 +59,7 @@ namespace Sample.Azure.Translator.Services
 
                         if (response.Content == null)
                         {
-                            throw new Exception($"{TAG} Response content is empty.");
+                            throw new Exception($"{Tag} Response content is empty.");
                         }
 
                         var resultJson = await response.Content.ReadAsStringAsync();
@@ -75,13 +71,13 @@ namespace Sample.Azure.Translator.Services
 
                         if (response.IsSuccessStatusCode)
                         {
-                            var resultModel = JsonSerializer.Deserialize<IEnumerable<TranslationResultModel>>(resultJson, jsonSerializerOptions);
+                            var resultModel = JsonSerializer.Deserialize<IEnumerable<TextTranslatorResultModel>>(resultJson, jsonSerializerOptions);
 
-                            logger.LogInformation($"${TAG} The request has been processed. => Translated.");
+                            logger.LogInformation($"${Tag} The request has been processed. => Translated.");
 
                             if (resultSet == null)
                             {
-                                resultSet = new List<TranslationResultModel>(resultModel);
+                                resultSet = new List<TextTranslatorResultModel>(resultModel);
                             }
                             else
                             {
@@ -105,7 +101,7 @@ namespace Sample.Azure.Translator.Services
                         {
                             var resultModel = JsonSerializer.Deserialize<TranslationErrorResultModel>(resultJson, jsonSerializerOptions);
 
-                            logger.LogInformation($"${TAG} The request does not has been processed. => Not  Translated.");
+                            logger.LogInformation($"${Tag} The request does not has been processed. => Not  Translated.");
 
                             throw new SomethingWrongException<TranslationErrorResultModel>(resultModel.Error.Message, resultModel);
                         }
@@ -116,7 +112,7 @@ namespace Sample.Azure.Translator.Services
             return resultSet;
         }
 
-        private IEnumerable<Uri> getRequestUri(TranslationRequestModel model)
+        private IEnumerable<Uri> getRequestUri(TextTranslatorRequestModel model)
         {
             if (model.IsTranslationEachLanguage)
             {
@@ -131,15 +127,9 @@ namespace Sample.Azure.Translator.Services
             }
         }
 
-        private Uri getRequestUri(TranslationRequestModel model, string languageCode = "")
+        private Uri getRequestUri(TextTranslatorRequestModel model, string languageCode = "")
         {
-            var endpoint = azureTranslatorConnectionOptions.Endpoint;
-            if (endpoint.EndsWith("/"))
-            {
-                endpoint = endpoint.Substring(0, endpoint.Length - 1);
-            }
-
-            var url = $"{endpoint}{TRANSLATOR_ROUTE}";
+            var url = GetApiBaseUrl();
 
             if (string.IsNullOrWhiteSpace(languageCode))
             {
@@ -182,33 +172,9 @@ namespace Sample.Azure.Translator.Services
             return requestUri;
         }
 
-        private void ValidateAzureTranslateConnectionOptions()
-        {
-            var errorMessage = new List<string>();
+       
 
-            if (string.IsNullOrWhiteSpace(azureTranslatorConnectionOptions.Endpoint))
-            {
-                errorMessage.Add($"{nameof(AzureTranslatorConnectionOptions.Endpoint)} is required");
-            }
-
-            if (string.IsNullOrWhiteSpace(azureTranslatorConnectionOptions.Region))
-            {
-                errorMessage.Add($"{nameof(AzureTranslatorConnectionOptions.Region)} is required");
-            }
-
-            if (string.IsNullOrWhiteSpace(azureTranslatorConnectionOptions.SubscriptionKey))
-            {
-                errorMessage.Add($"{nameof(AzureTranslatorConnectionOptions.SubscriptionKey)} is required");
-            }
-
-            if (errorMessage.Count > 0)
-            {
-                logger.LogInformation($"{TAG} {nameof(AzureTranslatorConnectionOptions)} is invalid.");
-                throw new OptionsValidationException(AzureTranslatorConnectionOptions.Name, typeof(AzureTranslatorConnectionOptions), errorMessage.ToArray());
-            }
-        }
-
-        private void ValidateRequestbody(TranslationRequestModel model)
+        private void ValidateRequestbody(TextTranslatorRequestModel model)
         {
             var message = "";
             var errorMessage = new List<string>();
@@ -232,7 +198,7 @@ namespace Sample.Azure.Translator.Services
                 // Request to translate (+1) and Response to be translated ( + count of to translate languages)
                 var contentLength = input.Text.Length * ((model.IsTranslationEachLanguage ? 1 : model.ToLanguages.Count()) + 1);
 
-                logger.LogInformation($"{TAG} Calculated characters={contentLength}");
+                logger.LogInformation($"{Tag} Calculated characters={contentLength}");
 
                 if (contentLength > 10000)
                 {
@@ -244,15 +210,11 @@ namespace Sample.Azure.Translator.Services
             if (errorMessage.Count > 0)
             {
                 message = "Request body is invalid.";
-                logger.LogInformation($"{TAG} {message}");
+                logger.LogInformation($"{Tag} {message}");
                 throw new HttpStatusException<IEnumerable<string>>(HttpStatusCode.BadRequest, message, errorMessage.ToArray());
             }
         }
 
-
-        private readonly AzureTranslatorConnectionOptions azureTranslatorConnectionOptions;
         private readonly ILogger logger;
     }
-
-    
 }

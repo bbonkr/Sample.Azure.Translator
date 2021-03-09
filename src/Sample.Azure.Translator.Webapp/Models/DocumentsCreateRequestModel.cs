@@ -10,5 +10,9 @@ namespace Sample.Azure.Translator.Webapp.Models
     public class Documents
     {
         public record CreateRequestModel(string Name, string ContentType, string Contents, IList<IFormFile> Files);
+
+        public record TranslateRequestModel(string Name, string CriteriaLanguage, IEnumerable<string> TargetLanguages);
+
+        public record TranslateResponseModel(string Url);
     }
 }

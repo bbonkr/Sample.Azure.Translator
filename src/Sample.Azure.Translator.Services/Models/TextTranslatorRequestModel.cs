@@ -9,18 +9,18 @@ namespace Sample.Azure.Translator.Models
     /// <summary>
     /// The string to translate.
     /// </summary>
-    public record TranslationRequestInputModel(string Text);
+    public record TextTranslatorRequestInputModel(string Text);
 
-    public class TranslationRequestModel
+    public class TextTranslatorRequestModel
     {
         /// <summary>
         /// Required
         /// <para>
         /// Each array element is the string to translate.
         /// </para>
-        /// <see cref="TranslationRequestInputModel"/>
+        /// <see cref="TextTranslatorRequestInputModel"/>
         /// </summary>
-        public IEnumerable<TranslationRequestInputModel> Inputs { get; init; }
+        public IEnumerable<TextTranslatorRequestInputModel> Inputs { get; init; }
 
         /// <summary>
         /// Required
@@ -81,7 +81,7 @@ namespace Sample.Azure.Translator.Models
         public bool IsTranslationEachLanguage { get; init; } = false;
     }
 
-    public class TranslationResultModel
+    public class TextTranslatorResultModel
     {
         public DetectedLanguage DetectedLanguage { get; set; }
         public TextResult SourceText { get; set; }
