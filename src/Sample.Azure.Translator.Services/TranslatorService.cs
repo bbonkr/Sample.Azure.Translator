@@ -210,6 +210,7 @@ namespace Sample.Azure.Translator.Services
 
         private void ValidateRequestbody(TranslationRequestModel model)
         {
+            var message = "";
             var errorMessage = new List<string>();
 
             var inputsCount = model.Inputs.Count();
@@ -242,8 +243,9 @@ namespace Sample.Azure.Translator.Services
 
             if (errorMessage.Count > 0)
             {
-                logger.LogInformation($"{TAG} Request body is invalid.");
-                throw new InvalidRequestException<IEnumerable<string>>("Request body is invalid.", errorMessage.ToArray());
+                message = "Request body is invalid.";
+                logger.LogInformation($"{TAG} {message}");
+                throw new HttpStatusException<IEnumerable<string>>(HttpStatusCode.BadRequest, message, errorMessage.ToArray());
             }
         }
 

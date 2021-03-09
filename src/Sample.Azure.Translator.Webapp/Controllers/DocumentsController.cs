@@ -22,50 +22,15 @@ namespace Sample.Azure.Translator.Webapp.Controllers
     public class DocumentsController : ApiControllerBase
     {
         public DocumentsController(
-            IAzureStorageBlobService<TranslateAzureStorageContainer> storageService,
+            IStorageService<TranslateAzureBlobStorageContainer> storageService,
             ILoggerFactory loggerFactory)
         {
             this.storageService = storageService;
             logger = loggerFactory.CreateLogger<DocumentsController>();
         }
 
-
-        //[HttpPost]
-        //[Route("file")]
-        //public async Task<IActionResult> CreateDocumentFromFiles(List<IFormFile> files)
-        //{
-        //    try
-        //    {
-        //        var resultSet = new List<BlobCreateResultModel>();
-
-        //        if (files.Count > 0)
-        //        {
-        //            foreach (var file in files)
-        //            {
-        //                using (var stream = file.OpenReadStream())
-        //                {
-        //                    var result = await storageService.CreateAsync(file.Name, stream, file.ContentType);
-        //                    resultSet.Add(result);
-        //                }
-        //            }
-
-        //            return StatusCode(HttpStatusCode.Created, resultSet);
-        //        }
-
-        //        return StatusCode(HttpStatusCode.BadRequest, "Does not be provided files.");
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.LogError(ex, ex.Message);
-
-        //        return StatusCode(HttpStatusCode.InternalServerError, ex.Message);
-        //    }
-        //}
-
         [HttpPost]
-        //[Route("string")]
-        public async Task<IActionResult> CreateDocument([FromForm] Documents.CreateRequestModel model)
+        public async Task<IActionResult> CreateDocumentAsync([FromForm] Documents.CreateRequestModel model)
         {
             var message = "";
             try
@@ -90,7 +55,8 @@ namespace Sample.Azure.Translator.Webapp.Controllers
                     if (!ModelState.IsValid)
                     {
                         message = "Invalid request body.";
-                        throw new InvalidRequestException<ErrorModel>(message, new ErrorModel
+
+                        throw new HttpStatusException<ErrorModel>(HttpStatusCode.BadRequest, message, new ErrorModel
                         {
                             Code = 400,
                             Message = message,
@@ -103,9 +69,9 @@ namespace Sample.Azure.Translator.Webapp.Controllers
 
                 return StatusCode(HttpStatusCode.Created, resultSet);
             }
-            catch (InvalidRequestException ex)
+            catch (HttpStatusException ex)
             {
-                return StatusCode(HttpStatusCode.BadRequest, ex.Message, ex.GetDetails());
+                return StatusCode(ex.StatusCode, ex.Message, ex.GetDetails());
             }
             catch (Exception ex)
             {
@@ -115,7 +81,34 @@ namespace Sample.Azure.Translator.Webapp.Controllers
             }
         }
 
-        private readonly IAzureStorageBlobService<TranslateAzureStorageContainer> storageService;
+        [HttpDelete]
+        [Route("{name}")]
+        public async Task<IActionResult> DeleteDocumentAsync(string name)
+        {
+            try
+            {
+                var result = await storageService.DeleteAsync(name);
+
+                if (!result)
+                {
+                    return StatusCode((int)HttpStatusCode.NotAcceptable);
+                }
+
+                return StatusCode((int)HttpStatusCode.Accepted);
+            }
+            catch (HttpStatusException ex)
+            {
+                return StatusCode(ex.StatusCode, ex.Message, ex.GetDetails());
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+
+                return StatusCode(HttpStatusCode.InternalServerError, ex.Message);
+            }
+        }
+
+        private readonly IStorageService<TranslateAzureBlobStorageContainer> storageService;
         private readonly ILogger logger;
     }
 }

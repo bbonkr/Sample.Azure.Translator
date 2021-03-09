@@ -11,9 +11,11 @@ namespace Sample.Azure.Translator
         public SomethingWrongException(string message) : base(message) { }
 
         public abstract object GetDetails();
+
+        public abstract T GetDetails<T>();
     }
 
-    public class SomethingWrongException<T> : SomethingWrongException where T : class
+    public class SomethingWrongException<T> : SomethingWrongException
     {
         public SomethingWrongException(string message, T details) : base(message)
         {
@@ -22,9 +24,13 @@ namespace Sample.Azure.Translator
 
         public T Details { get; init; }
 
-        public override T GetDetails()
+        public override object GetDetails()
         {
             return Details;
+        }
+        public override TDetail GetDetails<TDetail>()
+        {
+            return (TDetail)GetDetails();
         }
     }
 }

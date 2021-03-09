@@ -123,7 +123,7 @@ namespace Sample.Azure.Translator.App
 
                 Console.WriteLine($"Result: {result.ToJson()}");
             }
-            catch(InvalidRequestException ex)
+            catch(HttpStatusException ex)
             {
                 Console.WriteLine($"Exception: {ex.Message}");
                 Console.WriteLine(ex.GetDetails().ToJson());

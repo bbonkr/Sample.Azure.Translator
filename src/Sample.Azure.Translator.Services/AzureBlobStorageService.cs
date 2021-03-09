@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,23 +14,27 @@ using Azure.Storage.Sas;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using Sample.Azure.Translator.Models;
 using Sample.Azure.Translator.Services.Models;
 
 namespace Sample.Azure.Translator.Services
 {
-    public interface IAzureStorageBlobService<T>
+    public interface IStorageService<T>
     {
-        Task<BlobCreateResultModel> CreateAsync(string name, Stream stream, string contentType, CancellationToken token = default);
-        Task<BlobCreateResultModel> CreateAsync(string name, string contents, string contentType, CancellationToken token = default);
+        Task<BlobCreateResultModel> CreateAsync(string name, Stream stream, string contentType, CancellationToken cancellationToken = default);
+
+        Task<BlobCreateResultModel> CreateAsync(string name, string contents, string contentType, CancellationToken cancellationToken = default);
+
+        Task<bool> DeleteAsync(string name, CancellationToken cancellationToken = default);
     }
 
    
-    public class AzureStorageBlobService<T> : IAzureStorageBlobService<T> where T: AzureStorageContainerBase
+    public class AzureBlobStorageService<T> : IStorageService<T> where T: AzureBlobStorageContainerBase
     {
-        public AzureStorageBlobService(IOptionsMonitor<AzureStorageOptions> azureStorageOptionsAccessor, ILoggerFactory loggerFactory)
+        public AzureBlobStorageService(IOptionsMonitor<AzureStorageOptions> azureStorageOptionsAccessor, ILoggerFactory loggerFactory)
         {
             this.options = azureStorageOptionsAccessor.CurrentValue;
-            this.logger = loggerFactory.CreateLogger<AzureStorageBlobService<T>>();
+            this.logger = loggerFactory.CreateLogger<AzureBlobStorageService<T>>();
 
             var container = Activator.CreateInstance<T>();
             this.client = new BlobContainerClient(options.ConnectionString, container.GetContainerName());
@@ -67,7 +72,7 @@ namespace Sample.Azure.Translator.Services
             }
         }
 
-        public async Task<BlobCreateResultModel> CreateAsync(string name, string contents, string contentType, CancellationToken token = default)
+        public async Task<BlobCreateResultModel> CreateAsync(string name, string contents, string contentType, CancellationToken cancellationToken = default)
         {
             BlobCreateResultModel result;
 
@@ -80,7 +85,7 @@ namespace Sample.Azure.Translator.Services
                     writer.Close();
                 }
 
-                result = await CreateAsync(name, stream, contentType, token);
+                result = await CreateAsync(name, stream, contentType, cancellationToken);
 
                 stream.Close();
             }
@@ -88,13 +93,39 @@ namespace Sample.Azure.Translator.Services
             return result;
         }
 
-        public async Task FindByName(string name)
+        public async Task<bool> DeleteAsync(string name, CancellationToken cancellationToken = default)
         {
-            EnsureContainerCreated();
-
-            await foreach(var item in client.GetBlobsAsync(prefix: name))
+            var message = "";
+            try
             {
-               
+                EnsureContainerCreated();
+
+                var blobClient = client.GetBlobClient(name);
+
+                var exists = await blobClient.ExistsAsync(cancellationToken);
+
+                if (exists)
+                {
+                    var result = await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: cancellationToken);
+
+                    return result;
+                }
+                else
+                {
+                    message = "Could not find a file.";
+                    throw new HttpStatusException<ErrorModel>(HttpStatusCode.NotFound, message, new ErrorModel
+                    {
+                        Code = (int)HttpStatusCode.NotFound,
+                        Message = message,
+                    });
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+
+                throw;
             }
         }
 
@@ -114,12 +145,12 @@ namespace Sample.Azure.Translator.Services
         public string ConnectionString { get; set; }
     }
 
-    public abstract class AzureStorageContainerBase
+    public abstract class AzureBlobStorageContainerBase
     {
         public abstract string GetContainerName();
     }
 
-    public class TranslateAzureStorageContainer : AzureStorageContainerBase
+    public class TranslateAzureBlobStorageContainer : AzureBlobStorageContainerBase
     {
         public override string GetContainerName()
         {

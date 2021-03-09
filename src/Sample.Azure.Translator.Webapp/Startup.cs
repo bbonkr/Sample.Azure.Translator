@@ -37,7 +37,7 @@ namespace Sample.Azure.Translator.Webapp
             services.Configure<AzureTranslatorConnectionOptions>(Configuration.GetSection(AzureTranslatorConnectionOptions.Name));
             services.Configure<AzureStorageOptions>(Configuration.GetSection(AzureStorageOptions.Name));
 
-            services.AddTransient<IAzureStorageBlobService<TranslateAzureStorageContainer>, AzureStorageBlobService<TranslateAzureStorageContainer>>();
+            services.AddTransient<IStorageService<TranslateAzureBlobStorageContainer>, AzureBlobStorageService<TranslateAzureBlobStorageContainer>>();
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
             var defaultVersion = new ApiVersion(1, 0);
