@@ -11,8 +11,8 @@ using System.IO;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
-using Sample.Azure.Translator.App.Models;
-using Sample.Azure.Translator.App.Services;
+using Sample.Azure.Translator.Services;
+using Sample.Azure.Translator.Services.Models;
 
 namespace Sample.Azure.Translator.App
 {
@@ -103,13 +103,13 @@ namespace Sample.Azure.Translator.App
                 while (string.IsNullOrWhiteSpace(text));
             }
 
-            var translatorService = host.Services.GetRequiredService<ITranslatorService>();
+            var translatorService = host.Services.GetRequiredService<ITextTranslatorService>();
 
-            var source = new TranslationRequestModel
+            var source = new TextTranslatorRequestModel
             {
-                Inputs = new TranslationRequestInputModel[]
+                Inputs = new TextTranslatorRequestInputModel[]
                 {
-                    new TranslationRequestInputModel(text),
+                    new TextTranslatorRequestInputModel(text),
                 },
                 ToLanguages = toLanguages,
                 FromLanguage = from,
@@ -123,14 +123,9 @@ namespace Sample.Azure.Translator.App
 
                 Console.WriteLine($"Result: {result.ToJson()}");
             }
-            catch(InvalidRequestException ex)
+            catch(ApiException ex)
             {
                 Console.WriteLine($"Exception: {ex.Message}");
-                Console.WriteLine(ex.GetDetails().ToJson());
-            }
-            catch(SomethingWrongException ex)
-            {
-                Console.WriteLine($"Exception: {ex.Message} ");
                 Console.WriteLine(ex.GetDetails().ToJson());
             }
             catch (Exception ex)
@@ -144,7 +139,7 @@ namespace Sample.Azure.Translator.App
         {
             // DI here
             services.AddTransient<ILocalFileService, LocalFileService>();
-            services.AddTransient<ITranslatorService, TranslatorService>();
+            services.AddTransient<ITextTranslatorService, TextTranslatorService>();
 
             return services;
         }
@@ -190,23 +185,5 @@ namespace Sample.Azure.Translator.App
                 builder.AddConsole();
             });
 
-    }
-
-    public static class ObjectExtensions
-    {
-        public static string ToJson<T>(this T obj, JsonSerializerOptions options = null)
-        {
-            
-
-            var actualOptions = options ?? new JsonSerializerOptions { 
-                WriteIndented = true,
-                //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All, UnicodeRanges.Cyrillic),
-                // ! Caution
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-
-            };
-
-            return JsonSerializer.Serialize<T>(obj, actualOptions);
-        }
     }
 }
