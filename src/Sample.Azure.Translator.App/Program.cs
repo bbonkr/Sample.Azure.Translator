@@ -11,8 +11,9 @@ using System.IO;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
-using Sample.Azure.Translator.Services;
-using Sample.Azure.Translator.Services.Models;
+using kr.bbon.Azure.Translator.Services;
+using kr.bbon.Azure.Translator.Services.Models;
+using kr.bbon.Azure.Translator.Services.Models.TextTranslation.TranslationRequest;
 
 namespace Sample.Azure.Translator.App
 {
@@ -105,11 +106,11 @@ namespace Sample.Azure.Translator.App
 
             var translatorService = host.Services.GetRequiredService<ITextTranslatorService>();
 
-            var source = new TextTranslatorRequestModel
+            var source = new RequestModel
             {
-                Inputs = new TextTranslatorRequestInputModel[]
+                Inputs = new Input[]
                 {
-                    new TextTranslatorRequestInputModel(text),
+                    new Input(text),
                 },
                 ToLanguages = toLanguages,
                 FromLanguage = from,

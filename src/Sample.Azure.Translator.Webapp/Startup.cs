@@ -16,8 +16,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
-using Sample.Azure.Translator.Services;
-using Sample.Azure.Translator.Services.Strategies;
+using kr.bbon.Azure.Translator.Services;
+using kr.bbon.Azure.Translator.Services.Strategies;
 
 using Swashbuckle.AspNetCore.SwaggerGen;
 using kr.bbon.AspNetCore;
