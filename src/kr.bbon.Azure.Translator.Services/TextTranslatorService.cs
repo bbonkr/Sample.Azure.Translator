@@ -10,13 +10,14 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-using Sample.Azure.Translator.Services.Models;
+using kr.bbon.Azure.Translator.Services.Models;
+using kr.bbon.Azure.Translator.Services.Models.TextTranslation.TranslationRequest;
 
-namespace Sample.Azure.Translator.Services
+namespace kr.bbon.Azure.Translator.Services
 {
     public interface ITextTranslatorService
     {
-        Task<IEnumerable<TextTranslatorResultModel>> TranslateAsync(TextTranslatorRequestModel model);
+        Task<IEnumerable<ResponseModel>> TranslateAsync(RequestModel model);
     }
 
     public class TextTranslatorService : TranslatorServiceBase, ITextTranslatorService
@@ -32,12 +33,12 @@ namespace Sample.Azure.Translator.Services
             logger = loggerFactory.CreateLogger<TextTranslatorService>();
         }
 
-        public async Task<IEnumerable<TextTranslatorResultModel>> TranslateAsync(TextTranslatorRequestModel model)
+        public async Task<IEnumerable<ResponseModel>> TranslateAsync(RequestModel model)
         {
             ValidateAzureTranslateConnectionOptions();
             ValidateRequestbody(model);
 
-            List<TextTranslatorResultModel> resultSet = null;
+            List<ResponseModel> resultSet = null;
 
             var requestBody = SerializeToJson(model.Inputs);
 
@@ -71,13 +72,13 @@ namespace Sample.Azure.Translator.Services
 
                         if (response.IsSuccessStatusCode)
                         {
-                            var resultModel = JsonSerializer.Deserialize<IEnumerable<TextTranslatorResultModel>>(resultJson, jsonSerializerOptions);
+                            var resultModel = JsonSerializer.Deserialize<IEnumerable<Models.TextTranslation.TranslationRequest.ResponseModel>>(resultJson, jsonSerializerOptions);
 
                             logger.LogInformation($"${Tag} The request has been processed. => Translated.");
 
                             if (resultSet == null)
                             {
-                                resultSet = new List<TextTranslatorResultModel>(resultModel);
+                                resultSet = new List<Models.TextTranslation.TranslationRequest.ResponseModel>(resultModel);
                             }
                             else
                             {
@@ -99,7 +100,7 @@ namespace Sample.Azure.Translator.Services
                         }
                         else
                         {
-                            var resultModel = JsonSerializer.Deserialize<TranslationErrorResultModel>(resultJson, jsonSerializerOptions);
+                            var resultModel = JsonSerializer.Deserialize<ErrorResponseModel>(resultJson, jsonSerializerOptions);
 
                             logger.LogInformation($"${Tag} The request does not has been processed. => Not  Translated.");
 
@@ -112,7 +113,7 @@ namespace Sample.Azure.Translator.Services
             return resultSet;
         }
 
-        private IEnumerable<Uri> getRequestUri(TextTranslatorRequestModel model)
+        private IEnumerable<Uri> getRequestUri(RequestModel model)
         {
             if (model.IsTranslationEachLanguage)
             {
@@ -127,9 +128,9 @@ namespace Sample.Azure.Translator.Services
             }
         }
 
-        private Uri getRequestUri(TextTranslatorRequestModel model, string languageCode = "")
+        private Uri getRequestUri(RequestModel model, string languageCode = "")
         {
-            var url = GetApiBaseUrl();
+            var url = GetApiUrl();
 
             if (string.IsNullOrWhiteSpace(languageCode))
             {
@@ -172,7 +173,7 @@ namespace Sample.Azure.Translator.Services
             return requestUri;
         }
 
-        private void ValidateRequestbody(TextTranslatorRequestModel model)
+        private void ValidateRequestbody(RequestModel model)
         {
             var message = "";
             var errorMessage = new List<string>();

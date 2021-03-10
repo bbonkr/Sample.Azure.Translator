@@ -4,23 +4,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sample.Azure.Translator.Services.Models
+namespace kr.bbon.Azure.Translator.Services.Models.TextTranslation.TranslationRequest
 {
+
     /// <summary>
     /// The string to translate.
     /// </summary>
-    public record TextTranslatorRequestInputModel(string Text);
+    public record Input(string Text);
 
-    public class TextTranslatorRequestModel
+    public class RequestModel
     {
         /// <summary>
         /// Required
         /// <para>
         /// Each array element is the string to translate.
         /// </para>
-        /// <see cref="TextTranslatorRequestInputModel"/>
+        /// <see cref="Input"/>
         /// </summary>
-        public IEnumerable<TextTranslatorRequestInputModel> Inputs { get; init; }
+        public IEnumerable<Input> Inputs { get; init; }
 
         /// <summary>
         /// Required
@@ -81,7 +82,7 @@ namespace Sample.Azure.Translator.Services.Models
         public bool IsTranslationEachLanguage { get; init; } = false;
     }
 
-    public class TextTranslatorResultModel
+    public class ResponseModel
     {
         public DetectedLanguage DetectedLanguage { get; set; }
         public TextResult SourceText { get; set; }
@@ -148,6 +149,5 @@ namespace Sample.Azure.Translator.Services.Models
         public const string Asterisk = "Asterisk";
         public const string Tag = "Tag";
     }
-
 
 }

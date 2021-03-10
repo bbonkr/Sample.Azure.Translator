@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace Sample.Azure.Translator.Services
+namespace kr.bbon.Azure.Translator.Services
 {
     public abstract class ApiException : Exception
     {

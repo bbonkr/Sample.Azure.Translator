@@ -13,9 +13,11 @@ using Azure.Storage.Sas;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Sample.Azure.Translator.Services.Models;
 
-namespace Sample.Azure.Translator.Services
+using kr.bbon.Azure.Translator.Services.Models;
+using kr.bbon.Azure.Translator.Services.Models.AzureStorage.Blob;
+
+namespace kr.bbon.Azure.Translator.Services
 {
     public interface IStorageService<T>
     {
@@ -222,23 +224,6 @@ namespace Sample.Azure.Translator.Services
         private readonly ILogger logger;
     }
 
-    public class AzureStorageOptions
-    {
-        public static string Name = "AzureStorage";
-        public string ConnectionString { get; set; }
-    }
 
-    public abstract class AzureBlobStorageContainerBase
-    {
-        public abstract string GetContainerName();
-    }
-
-    public class TranslateAzureBlobStorageContainer : AzureBlobStorageContainerBase
-    {
-        public override string GetContainerName()
-        {
-            return "document-translation-sample";
-        }
-    }
 
 }

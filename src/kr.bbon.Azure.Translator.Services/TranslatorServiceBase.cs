@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using Microsoft.Extensions.Options;
 
-namespace Sample.Azure.Translator.Services
+namespace kr.bbon.Azure.Translator.Services
 {
     public abstract class TranslatorServiceBase: ServiceBase
     {
@@ -15,18 +15,18 @@ namespace Sample.Azure.Translator.Services
         public TranslatorServiceBase(IOptionsMonitor<AzureTranslatorConnectionOptions> azureTranslatorConnectionOptionsAccessor)
         {
             options = azureTranslatorConnectionOptionsAccessor.CurrentValue;
+            errorMessages = new List<string>();
         }
 
         /// <summary>
         /// Api route
+        /// <para>
+        /// Route must start a '/'
+        /// </para>
         /// </summary>
         protected abstract string Route { get; }      
 
-        /// <summary>
-        /// Api base url
-        /// </summary>
-        /// <returns></returns>
-        protected virtual string GetApiBaseUrl()
+        protected virtual string GetBaseUrl()
         {
             var endpoint = options.Endpoint;
             if (endpoint.EndsWith("/"))
@@ -34,36 +34,53 @@ namespace Sample.Azure.Translator.Services
                 endpoint = endpoint.Substring(0, endpoint.Length - 1);
             }
 
-            var url = $"{endpoint}{Route}";
+            var url = $"{endpoint}";
 
             return url;
         }
 
-        protected virtual void ValidateAzureTranslateConnectionOptions()
+        /// <summary>
+        /// Api base url
+        /// </summary>
+        /// <returns></returns>
+        protected virtual string GetApiUrl()
         {
-            var errorMessage = new List<string>();
+            var url = $"{GetBaseUrl()}{Route}";
 
+            return url;
+        }
+
+        protected virtual void ValidateConditionAzureTranslateConnectionOptions()
+        {
             if (string.IsNullOrWhiteSpace(options.Endpoint))
             {
-                errorMessage.Add($"{nameof(AzureTranslatorConnectionOptions.Endpoint)} is required");
+                errorMessages.Add($"{nameof(AzureTranslatorConnectionOptions.Endpoint)} is required");
             }
 
             if (string.IsNullOrWhiteSpace(options.Region))
             {
-                errorMessage.Add($"{nameof(AzureTranslatorConnectionOptions.Region)} is required");
+                errorMessages.Add($"{nameof(AzureTranslatorConnectionOptions.Region)} is required");
             }
 
             if (string.IsNullOrWhiteSpace(options.SubscriptionKey))
             {
-                errorMessage.Add($"{nameof(AzureTranslatorConnectionOptions.SubscriptionKey)} is required");
+                errorMessages.Add($"{nameof(AzureTranslatorConnectionOptions.SubscriptionKey)} is required");
             }
+        }
 
-            if (errorMessage.Count > 0)
+        protected void ValidateAzureTranslateConnectionOptions()
+        {
+            errorMessages.Clear();
+
+            ValidateConditionAzureTranslateConnectionOptions();
+
+            if (errorMessages.Count > 0)
             {
-                throw new OptionsValidationException(AzureTranslatorConnectionOptions.Name, typeof(AzureTranslatorConnectionOptions), errorMessage.ToArray());
+                throw new OptionsValidationException(AzureTranslatorConnectionOptions.Name, typeof(AzureTranslatorConnectionOptions), errorMessages);
             }
         }
 
         protected readonly AzureTranslatorConnectionOptions options;
+        protected readonly IList<string> errorMessages;
     }
 }

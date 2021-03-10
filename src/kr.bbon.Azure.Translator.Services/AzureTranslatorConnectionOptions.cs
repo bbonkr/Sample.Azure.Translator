@@ -3,11 +3,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sample.Azure.Translator.Services
+namespace kr.bbon.Azure.Translator.Services
 {
     public class AzureTranslatorConnectionOptions
     {
         public static string Name = "Translator";
+
+        public string ResourceName { get; set; }
 
         public string Endpoint { get; set; }
 

@@ -5,47 +5,48 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sample.Azure.Translator.Services.Models
+namespace kr.bbon.Azure.Translator.Services.Models.DocumentTranslation.TranslationRequest
 {
-    public class DocumentTranslationRequestModel
+
+    public class RequestModel
     {
         /// <summary>
         /// 문서 또는 문서를 포함 하는 폴더의 입력 목록
         /// </summary>
         [Required]
-        public IEnumerable<DocumentTranslationBatchRequest> Inputs { get; set; }
+        public IEnumerable<BatchInput> Inputs { get; set; }
     }
 
     /// <summary>
     /// 입력 일괄 처리 변환 요청에 대한 정의
     /// </summary>
-    public class DocumentTranslationBatchRequest
+    public class BatchInput
     {
         /// <summary>
         /// 입력 문서의 원본
         /// </summary>
-        public DocumentTranslationSourceInput Source { get; set; }
+        public SourceInput Source { get; set; }
 
         /// <summary>
         /// 입력 문서 원본 문자열의 저장소 유형입니다.
         /// <para>
-        /// <see cref="DocumentTranslationStorageInputTypes"/> 형식에서 제공하는 상수를 확인하세요.
+        /// <see cref="StorageInputTypes"/> 형식에서 제공하는 상수를 확인하세요.
         /// </para>
         /// </summary>
-        public string StorageType { get; set; } = DocumentTranslationStorageInputTypes.File;
+        public string StorageType { get; set; } = StorageInputTypes.File;
 
         /// <summary>
         /// 출력의 대상 위치입니다.
         /// </summary>
-        public IEnumerable<DocumentTranslationTargetInput> Targets { get; set; }
+        public IEnumerable<TargetInput> Targets { get; set; }
     }
 
     /// <summary>
     /// 입력 문서의 원본
     /// </summary>
-    public class DocumentTranslationSourceInput
+    public class SourceInput
     {
-        public DocumentTranslationDocumentFilter Filter { get; set; }
+        public Filter Filter { get; set; }
 
         /// <summary>
         /// <para>언어코드</para>
@@ -69,16 +70,16 @@ namespace Sample.Azure.Translator.Services.Models
         /// Storage source
         /// </para>
         /// <para>
-        /// <see cref="DocumentTranslationStorageSources"/> 형식에서 제공하는 상수를 확인하세요.
+        /// <see cref="StorageSources"/> 형식에서 제공하는 상수를 확인하세요.
         /// </para>
         /// </summary>
-        public string StorageSource { get; set; } = DocumentTranslationStorageSources.AzureBlob;
+        public string StorageSource { get; set; } = StorageSources.AzureBlob;
     }
 
     /// <summary>
     /// 완성 된 번역 문서의 대상
     /// </summary>
-    public class DocumentTranslationTargetInput
+    public class TargetInput
     {
         /// <summary>
         /// 번역 요청에 대 한 범주/사용자 지정 시스템
@@ -88,7 +89,7 @@ namespace Sample.Azure.Translator.Services.Models
         /// <summary>
         /// 용어집 목록
         /// </summary>
-        public IEnumerable<DocumentTranslationGlossary> Glossaries { get; set; }
+        public IEnumerable<Glossary> Glossaries { get; set; }
 
         /// <summary>
         /// 대상 언어
@@ -99,10 +100,10 @@ namespace Sample.Azure.Translator.Services.Models
         /// <summary>
         /// 저장소 원본
         /// <para>
-        /// <see cref="DocumentTranslationStorageSources"/> 형식에서 제공하는 상수를 확인하세요.
+        /// <see cref="StorageSources"/> 형식에서 제공하는 상수를 확인하세요.
         /// </para>
         /// </summary>
-        public string StorageSource { get; set; } = DocumentTranslationStorageSources.AzureBlob;
+        public string StorageSource { get; set; } = StorageSources.AzureBlob;
 
         /// <summary>
         /// 문서를 포함 하는 폴더/컨테이너의 위치
@@ -111,7 +112,7 @@ namespace Sample.Azure.Translator.Services.Models
         public string TargetUrl { get; set; }
     }
 
-    public class DocumentTranslationDocumentFilter
+    public class Filter
     {
         /// <summary>
         /// 변환을 위해 소스 경로에서 문서를 필터링 하는 대/소문자를 구분 하는 접두사 문자열입니다. 
@@ -130,7 +131,8 @@ namespace Sample.Azure.Translator.Services.Models
         public string Suffix { get; set; }
     }
 
-    public class DocumentTranslationGlossary
+
+    public class Glossary
     {
         /// <summary>
         /// 형식
@@ -147,10 +149,10 @@ namespace Sample.Azure.Translator.Services.Models
         /// <summary>
         /// 저장소 원본
         /// <para>
-        /// <see cref="DocumentTranslationStorageSources"/> 형식에서 제공하는 상수를 확인하세요.
+        /// <see cref="StorageSources"/> 형식에서 제공하는 상수를 확인하세요.
         /// </para>
         /// </summary>
-        public string StorageSource { get; set; } = DocumentTranslationStorageSources.AzureBlob;
+        public string StorageSource { get; set; } = StorageSources.AzureBlob;
 
         /// <summary>
         /// 버전
@@ -161,19 +163,31 @@ namespace Sample.Azure.Translator.Services.Models
     /// <summary>
     /// 저장소 원본
     /// </summary>
-    public class DocumentTranslationStorageSources
+    public class StorageSources
     {
         public static string AzureBlob = "AzureBlob";
     }
 
+
     /// <summary>
     /// 입력 문서 원본 문자열의 저장소 유형입니다.
     /// </summary>
-    public class DocumentTranslationStorageInputTypes
+    public class StorageInputTypes
     {
         public static string File = "File";
         public static string Folder = "Folder";
     }
 
-   
+    public class ResponseModel
+    {
+        /// <summary>
+        /// Translation job id
+        /// </summary>
+        public string Id { get; set; }
+    }
+
+    //public class ErrorResponseModel
+    //{
+    //    public ErrorModel<int> Error { get; set; }
+    //}
 }

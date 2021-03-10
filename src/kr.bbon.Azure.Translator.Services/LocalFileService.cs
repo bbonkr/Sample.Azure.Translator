@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
-namespace Sample.Azure.Translator.Services
+namespace kr.bbon.Azure.Translator.Services
 {
     public interface ILocalFileService
     {

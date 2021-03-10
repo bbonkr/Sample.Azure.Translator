@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sample.Azure.Translator.Services.Models
+namespace kr.bbon.Azure.Translator.Services.Models.AzureStorage.Blob
 {
     public class BlobCreateResultModel
     {

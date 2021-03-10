@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sample.Azure.Translator.Services\Sample.Azure.Translator.Services.csproj" />
+    <ProjectReference Include="..\kr.bbon.Azure.Translator.Services\kr.bbon.Azure.Translator.Services.csproj" />
     <ProjectReference Include="..\Sample.Azure.Translator\Sample.Azure.Translator.csproj" />
   </ItemGroup>
 

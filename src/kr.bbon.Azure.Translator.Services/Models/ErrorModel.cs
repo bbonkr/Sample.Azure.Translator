@@ -1,4 +1,4 @@
-﻿namespace Sample.Azure.Translator.Services.Models
+﻿namespace kr.bbon.Azure.Translator.Services.Models
 {
     public class ErrorModel<TCode>
     {
