@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Sample.Azure.Translator.Services.Models;
+using kr.bbon.Azure.Translator.Services.Models;
+using kr.bbon.Azure.Translator.Services.Models.AzureStorage.Blob;
 
 namespace Sample.Azure.Translator.Webapp
 {
