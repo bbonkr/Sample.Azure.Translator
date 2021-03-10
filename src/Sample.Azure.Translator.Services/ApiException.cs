@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Net;
 
-namespace Sample.Azure.Translator
+namespace Sample.Azure.Translator.Services
 {
-    public abstract class HttpStatusException : Exception
+    public abstract class ApiException : Exception
     {
-        public HttpStatusException(HttpStatusCode httpStatusCode, string message)
+        public ApiException(HttpStatusCode httpStatusCode, string message)
             : base(message)
         {
             this.StatusCode = httpStatusCode;
         }
-        public HttpStatusException(int httpStatusCode, string message)
+        public ApiException(int httpStatusCode, string message)
             : this((HttpStatusCode)httpStatusCode, message) { }
 
         public HttpStatusCode StatusCode { get; init; }
@@ -20,18 +20,18 @@ namespace Sample.Azure.Translator
         public abstract T GetDetails<T>();
     }
 
-    public class HttpStatusException<TDetail> : HttpStatusException
+    public class ApiHttpStatusException<TDetails> : ApiException
     {
-        public HttpStatusException(HttpStatusCode httpStatusCode, string message, TDetail details)
+        public ApiHttpStatusException(HttpStatusCode httpStatusCode, string message, TDetails details)
             : base(httpStatusCode, message)
         {
             this.Details = details;
         }
 
-        public HttpStatusException(int httpStatusCode, string message, TDetail details)
+        public ApiHttpStatusException(int httpStatusCode, string message, TDetails details)
             : this((HttpStatusCode)httpStatusCode, message, details) { }
 
-        public TDetail Details { get; init; }
+        public TDetails Details { get; init; }
 
         public override object GetDetails()
         {

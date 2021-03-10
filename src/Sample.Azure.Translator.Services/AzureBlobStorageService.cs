@@ -13,8 +13,6 @@ using Azure.Storage.Sas;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
-using Sample.Azure.Translator.Models;
 using Sample.Azure.Translator.Services.Models;
 
 namespace Sample.Azure.Translator.Services
@@ -70,11 +68,12 @@ namespace Sample.Azure.Translator.Services
                 else
                 {
                     message = "Could not find a file.";
-                    throw new HttpStatusException<ErrorModel>(HttpStatusCode.NotFound, message, new ErrorModel
+                    var details = new ErrorModel<int>
                     {
                         Code = (int)HttpStatusCode.NotFound,
                         Message = message,
-                    });
+                    };
+                    throw new ApiHttpStatusException<ErrorModel<int>>(HttpStatusCode.NotFound, message, details);
                 }
 
             }
@@ -94,7 +93,7 @@ namespace Sample.Azure.Translator.Services
             if (!client.CanGenerateSasUri || !blobClient.CanGenerateSasUri)
             {
                 message = "Could not generate the SAS uri.";
-                throw new HttpStatusException<ErrorModel>(HttpStatusCode.BadRequest, message, new ErrorModel
+                throw new ApiHttpStatusException<ErrorModel<int>>(HttpStatusCode.BadRequest, message, new ErrorModel<int>
                 {
                     Code = (int)HttpStatusCode.NotAcceptable,
                     Message = message,
@@ -197,7 +196,7 @@ namespace Sample.Azure.Translator.Services
                 else
                 {
                     message = "Could not find a file.";
-                    throw new HttpStatusException<ErrorModel>(HttpStatusCode.NotFound, message, new ErrorModel
+                    throw new ApiHttpStatusException<ErrorModel<int>>(HttpStatusCode.NotFound, message, new ErrorModel<int>
                     {
                         Code = (int)HttpStatusCode.NotFound,
                         Message = message,

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace Sample.Azure.Translator.Services
 {
-    public abstract class TranslatorServiceBase
+    public abstract class TranslatorServiceBase: ServiceBase
     {
         protected const string OCP_APIM_SUBSCRIPTION_KEY = "Ocp-Apim-Subscription-Key";
         protected const string OCP_APIM_SUBSCRIPTION_REGION = "Ocp-Apim-Subscription-Region";
@@ -20,12 +20,7 @@ namespace Sample.Azure.Translator.Services
         /// <summary>
         /// Api route
         /// </summary>
-        protected abstract string Route { get; }
-
-        /// <summary>
-        /// User defined logger Category 
-        /// </summary>
-        protected abstract string Tag { get; }
+        protected abstract string Route { get; }      
 
         /// <summary>
         /// Api base url
@@ -71,6 +66,4 @@ namespace Sample.Azure.Translator.Services
 
         protected readonly AzureTranslatorConnectionOptions options;
     }
-
-    
 }

@@ -16,30 +16,29 @@ namespace Sample.Azure.Translator.Services
         
         bool Exists(string filePath);
     }
-    public class LocalFileService : ILocalFileService
+    public class LocalFileService : ServiceBase, ILocalFileService
     {
         public LocalFileService(ILoggerFactory loggerFactory)
         {
             logger = loggerFactory.CreateLogger<LocalFileService>();
         }
 
+        protected override string Tag { get => "[LocalFileService]"; }
+
         public Task<string> ReadAsync(string filePath)
         {
             if (!Exists(filePath))
             {
-                throw new FileNotFoundException($"File does not find. ({filePath})");
+                throw new FileNotFoundException($"{Tag} File does not find. ({filePath})");
             }
 
             return File.ReadAllTextAsync(filePath);
         }
 
         public bool Exists(string filePath) => File.Exists(filePath);
-        //{
-        //    var path = Path.GetFullPath(filePath, Directory.GetCurrentDirectory());
-
-        //    return File.Exists(filePath);
-        //}
 
         private ILogger logger;
+
+        
     }
 }

@@ -10,8 +10,4 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Sample.Azure.Translator\Sample.Azure.Translator.csproj" />
-  </ItemGroup>
-
 </Project>

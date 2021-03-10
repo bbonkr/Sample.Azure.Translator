@@ -20,6 +20,7 @@ using Sample.Azure.Translator.Services;
 using Sample.Azure.Translator.Services.Strategies;
 
 using Swashbuckle.AspNetCore.SwaggerGen;
+using kr.bbon.AspNetCore;
 
 namespace Sample.Azure.Translator.Webapp
 {
@@ -35,37 +36,21 @@ namespace Sample.Azure.Translator.Webapp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<AppOptions>(Configuration.GetSection(AppOptions.Name));
             services.Configure<AzureTranslatorConnectionOptions>(Configuration.GetSection(AzureTranslatorConnectionOptions.Name));
-            services.Configure<AzureStorageOptions>(Configuration.GetSection(AzureStorageOptions.Name));
+            services.Configure<AzureStorageOptions>(Configuration.GetSection(AzureStorageOptions.Name));            
 
             services.AddTransient<IStorageService<TranslateAzureBlobStorageContainer>, AzureBlobStorageService<TranslateAzureBlobStorageContainer>>();
             services.AddTransient<ITextTranslatorService, TextTranslatorService>();
             services.AddTransient<IDocumentTranslationService, DocumentTranslationService>();
 
             services.AddTransient<ITranslatedDocumentNamingStrategy, TranslatedDocumentNamingStrategy>();
-            services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
-            var defaultVersion = new ApiVersion(1, 0);
-
-            services.AddApiVersioning(options =>
-            {
-                options.ReportApiVersions = true;
-                options.AssumeDefaultVersionWhenUnspecified = true;
-                options.DefaultApiVersion = defaultVersion;
-
-
-            });
-
-            services.AddVersionedApiExplorer(options =>
-            {
-                options.GroupNameFormat = "'v'VVV";
-                options.SubstituteApiVersionInUrl = true;
-                options.DefaultApiVersion = defaultVersion;
-            });
+            var defaultVersion = new ApiVersion(1, 0);     
 
             services.AddControllers();
 
-            services.AddSwaggerGen();
+            services.AddApiVersioningAndSwaggerGen<ConfigureSwaggerOptions>(defaultVersion);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -74,14 +59,7 @@ namespace Sample.Azure.Translator.Webapp
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(options =>
-                {
-                    foreach (var description in provider.ApiVersionDescriptions)
-                    {
-                        options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
-                    }
-                });
+                app.UseSwaggerUIWithApiVersioning();
             }
 
             app.UseHttpsRedirection();

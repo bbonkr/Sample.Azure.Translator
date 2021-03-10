@@ -36,7 +36,7 @@ namespace Sample.Azure.Translator.Services
 
             DocumentTranslationResponseModel result = null;
 
-            var requestBody = model.ToJson();
+            var requestBody = SerializeToJson(model);
 
             using (var client = new HttpClient())
             {
@@ -76,14 +76,15 @@ namespace Sample.Azure.Translator.Services
                         {
                             var code = "No operation location";
                             var message = "Translation operation could not find.";
-                            throw new SomethingWrongException<DocumentTranslationErrorResponseModel>(message, new DocumentTranslationErrorResponseModel
-                            {
-                                Error = new ErrorModel<string>
+                            throw new ApiHttpStatusException<ErrorModel<string>>(
+                                HttpStatusCode.NotAcceptable,
+                                message,
+                                new ErrorModel<string>
                                 {
                                     Code = code,
                                     Message = message,
                                 }
-                            });
+                            );
                         }
                     }
                     else
@@ -110,7 +111,7 @@ namespace Sample.Azure.Translator.Services
                             logger.LogInformation($"${Tag} The request does not has been processed. => Server error.");
                         }
 
-                        throw new SomethingWrongException<DocumentTranslationErrorResponseModel>(errorResult.Error.Message, errorResult);
+                        throw new ApiHttpStatusException<ErrorModel<string>>(response.StatusCode, errorResult.Error.Message, errorResult.Error);
                     }
                 }
             }
@@ -139,7 +140,7 @@ namespace Sample.Azure.Translator.Services
 
             if (errors.Count > 0)
             {
-                throw new HttpStatusException<IEnumerable<string>>(HttpStatusCode.BadRequest, errors.FirstOrDefault(), errors);
+                throw new ApiHttpStatusException<IEnumerable<string>>(HttpStatusCode.BadRequest, errors.FirstOrDefault(), errors);
             }
         }
 

@@ -11,8 +11,8 @@ using System.IO;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
-using Sample.Azure.Translator.Models;
 using Sample.Azure.Translator.Services;
+using Sample.Azure.Translator.Services.Models;
 
 namespace Sample.Azure.Translator.App
 {
@@ -123,14 +123,9 @@ namespace Sample.Azure.Translator.App
 
                 Console.WriteLine($"Result: {result.ToJson()}");
             }
-            catch(HttpStatusException ex)
+            catch(ApiException ex)
             {
                 Console.WriteLine($"Exception: {ex.Message}");
-                Console.WriteLine(ex.GetDetails().ToJson());
-            }
-            catch(SomethingWrongException ex)
-            {
-                Console.WriteLine($"Exception: {ex.Message} ");
                 Console.WriteLine(ex.GetDetails().ToJson());
             }
             catch (Exception ex)

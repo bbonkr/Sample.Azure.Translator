@@ -4,11 +4,11 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Http;
+using kr.bbon.AspNetCore.Mvc;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-using Sample.Azure.Translator.Models;
 using Sample.Azure.Translator.Services;
 using Sample.Azure.Translator.Services.Models;
 using Sample.Azure.Translator.Services.Strategies;
@@ -45,7 +45,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
 
                 return StatusCode(HttpStatusCode.OK, result);
             }
-            catch (HttpStatusException ex)
+            catch (ApiException ex)
             {
                 return StatusCode(ex.StatusCode, ex.Message, ex.GetDetails());
             }
@@ -84,7 +84,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
                     {
                         message = "Invalid request body.";
 
-                        throw new HttpStatusException<ErrorModel>(HttpStatusCode.BadRequest, message, new ErrorModel
+                        throw new ApiHttpStatusException<ErrorModel<int>>(HttpStatusCode.BadRequest, message, new ErrorModel<int>
                         {
                             Code = 400,
                             Message = message,
@@ -97,7 +97,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
 
                 return StatusCode(HttpStatusCode.Created, resultSet);
             }
-            catch (HttpStatusException ex)
+            catch (ApiException ex)
             {
                 return StatusCode(ex.StatusCode, ex.Message, ex.GetDetails());
             }
@@ -124,7 +124,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
 
                 return StatusCode((int)HttpStatusCode.Accepted);
             }
-            catch (HttpStatusException ex)
+            catch (ApiException ex)
             {
                 return StatusCode(ex.StatusCode, ex.Message, ex.GetDetails());
             }
@@ -146,7 +146,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
                 if (!ModelState.IsValid)
                 {
                     message = "Request body is invalid.";
-                    throw new HttpStatusException<ErrorModel>(HttpStatusCode.BadRequest, message, new ErrorModel
+                    throw new ApiHttpStatusException<ErrorModel<int>>(HttpStatusCode.BadRequest, message, new ErrorModel<int>
                     {
                         Code = (int)HttpStatusCode.BadRequest,
                         Message = message,
@@ -180,7 +180,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
 
                 return StatusCode(HttpStatusCode.Accepted, translationRequestResult);
             }
-            catch (HttpStatusException ex)
+            catch (ApiException ex)
             {
                 return StatusCode(ex.StatusCode, ex.Message, ex.GetDetails());
             }

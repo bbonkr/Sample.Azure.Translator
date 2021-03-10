@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-using Sample.Azure.Translator.Models;
+using Sample.Azure.Translator.Services.Models;
 
 namespace Sample.Azure.Translator.Services
 {
@@ -39,7 +39,7 @@ namespace Sample.Azure.Translator.Services
 
             List<TextTranslatorResultModel> resultSet = null;
 
-            var requestBody = model.Inputs.ToJson();
+            var requestBody = SerializeToJson(model.Inputs);
 
             using (var client = new HttpClient())
             {
@@ -103,7 +103,7 @@ namespace Sample.Azure.Translator.Services
 
                             logger.LogInformation($"${Tag} The request does not has been processed. => Not  Translated.");
 
-                            throw new SomethingWrongException<TranslationErrorResultModel>(resultModel.Error.Message, resultModel);
+                            throw new ApiHttpStatusException<ErrorModel<int>>(response.StatusCode, resultModel.Error.Message, resultModel.Error);
                         }
                     }
                 }
@@ -172,8 +172,6 @@ namespace Sample.Azure.Translator.Services
             return requestUri;
         }
 
-       
-
         private void ValidateRequestbody(TextTranslatorRequestModel model)
         {
             var message = "";
@@ -211,7 +209,7 @@ namespace Sample.Azure.Translator.Services
             {
                 message = "Request body is invalid.";
                 logger.LogInformation($"{Tag} {message}");
-                throw new HttpStatusException<IEnumerable<string>>(HttpStatusCode.BadRequest, message, errorMessage.ToArray());
+                throw new ApiHttpStatusException<IEnumerable<string>>(HttpStatusCode.BadRequest, message, errorMessage.ToArray());
             }
         }
 
