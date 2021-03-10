@@ -10,14 +10,13 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
 using Sample.Azure.Translator.Services.Models;
 
 namespace Sample.Azure.Translator.Services
 {
     public interface IDocumentTranslationService
     {
-        Task<DocumentTranslationRequestResponseModel> RequestTranslation(DocumentTranslationRequestModel model, CancellationToken cancellationToken = default);
+        Task<DocumentTranslationResponseModel> RequestTranslation(DocumentTranslationRequestModel model, CancellationToken cancellationToken = default);
     }
 
     public class DocumentTranslationService : TranslatorServiceBase, IDocumentTranslationService
@@ -30,12 +29,12 @@ namespace Sample.Azure.Translator.Services
             logger = loggerFactory.CreateLogger<DocumentTranslationService>();
         }
 
-        public async Task<DocumentTranslationRequestResponseModel> RequestTranslation(DocumentTranslationRequestModel model, CancellationToken cancellationToken = default)
+        public async Task<DocumentTranslationResponseModel> RequestTranslation(DocumentTranslationRequestModel model, CancellationToken cancellationToken = default)
         {
             ValidateAzureTranslateConnectionOptions();
             ValidateRequestbody(model);
 
-            DocumentTranslationRequestResponseModel result = null;
+            DocumentTranslationResponseModel result = null;
 
             var requestBody = model.ToJson();
 
@@ -55,6 +54,7 @@ namespace Sample.Azure.Translator.Services
                     var response = await client.SendAsync(request, cancellationToken);
 
                     var resultJson = await response.Content?.ReadAsStringAsync();
+                    var responseContentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
 
                     var jsonSerializerOptions = new JsonSerializerOptions
                     {
@@ -67,7 +67,7 @@ namespace Sample.Azure.Translator.Services
 
                         if (response.Headers.Contains("Operation-Location"))
                         {
-                            result = response.Headers.GetValues("Operation-Location").Select(operationLocation => new DocumentTranslationRequestResponseModel
+                            result = response.Headers.GetValues("Operation-Location").Select(operationLocation => new DocumentTranslationResponseModel
                             {
                                 Id = operationLocation,
                             }).FirstOrDefault();
@@ -78,7 +78,7 @@ namespace Sample.Azure.Translator.Services
                             var message = "Translation operation could not find.";
                             throw new SomethingWrongException<DocumentTranslationErrorResponseModel>(message, new DocumentTranslationErrorResponseModel
                             {
-                                Error = new DocumentTranslationErrorModel
+                                Error = new ErrorModel<string>
                                 {
                                     Code = code,
                                     Message = message,
@@ -88,9 +88,27 @@ namespace Sample.Azure.Translator.Services
                     }
                     else
                     {
-                        var errorResult = JsonSerializer.Deserialize<DocumentTranslationErrorResponseModel>(resultJson, jsonSerializerOptions);
+                        DocumentTranslationErrorResponseModel errorResult;
 
-                        logger.LogInformation($"${Tag} The request does not has been processed. => Not  Translated.");
+                        if (responseContentType.EndsWith("/json", StringComparison.OrdinalIgnoreCase))
+                        {
+                            errorResult = JsonSerializer.Deserialize<DocumentTranslationErrorResponseModel>(resultJson, jsonSerializerOptions);
+
+                            logger.LogInformation($"${Tag} The request does not has been processed. => Not Translated.");
+                        }
+                        else
+                        {
+                            errorResult = new DocumentTranslationErrorResponseModel
+                            {
+                                Error = new ErrorModel<string>
+                                {
+                                    Code = response.StatusCode.ToString(),
+                                    Message = response.ReasonPhrase,
+                                }
+                            };
+
+                            logger.LogInformation($"${Tag} The request does not has been processed. => Server error.");
+                        }
 
                         throw new SomethingWrongException<DocumentTranslationErrorResponseModel>(errorResult.Error.Message, errorResult);
                     }

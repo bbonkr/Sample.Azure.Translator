@@ -1,14 +1,7 @@
-﻿namespace Sample.Azure.Translator.Models
+﻿namespace Sample.Azure.Translator.Services.Models
 {
     public class TranslationErrorResultModel
     {
-        public ErrorModel Error { get; init; }
-    }
-
-    public class ErrorModel
-    {
-        public int Code { get; init; }
-
-        public string Message { get; init; }
+        public ErrorModel<int> Error { get; init; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace Sample.Azure.Translator.Models
+namespace Sample.Azure.Translator.Services.Models
 {
     public abstract class ResponseModel
     {

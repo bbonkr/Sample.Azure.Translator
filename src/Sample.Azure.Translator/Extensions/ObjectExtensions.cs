@@ -12,14 +12,13 @@ namespace Sample.Azure.Translator
     {
         public static string ToJson<T>(this T obj, JsonSerializerOptions options = null)
         {
-
-
             var actualOptions = options ?? new JsonSerializerOptions
             {
                 WriteIndented = true,
                 //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All, UnicodeRanges.Cyrillic),
                 // ! Caution
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
 
             return JsonSerializer.Serialize<T>(obj, actualOptions);

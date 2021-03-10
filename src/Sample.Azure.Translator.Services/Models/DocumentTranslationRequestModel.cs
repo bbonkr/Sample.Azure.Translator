@@ -175,32 +175,5 @@ namespace Sample.Azure.Translator.Services.Models
         public static string Folder = "Folder";
     }
 
-    public class DocumentTranslationRequestResponseModel
-    {
-        /// <summary>
-        /// Translation job id
-        /// </summary>
-        public string Id { get; set; }
-    }
-
-    public class DocumentTranslationErrorResponseModel
-    {
-        public DocumentTranslationErrorModel Error { get; set; }
-    }
-
-    public class DocumentTranslationErrorModel
-    {
-        public string Code { get; set; }
-
-        public string Message { get; set; }
-
-        public DocumentTranslationErrorModel InnerError { get; set; }
-    }
-
-    //public class DocumentTranslationRequestTranslationResponseModel
-    //{
-    //    public DocumentTranslationRequestResponseModel Success { get; set; }
-
-    //    public DocumentTranslationErrorResponseModel Error { get; set; }
-    //}
+   
 }
