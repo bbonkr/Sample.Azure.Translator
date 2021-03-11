@@ -56,6 +56,9 @@ namespace Sample.Azure.Translator.Webapp.Controllers
 
                 var result = await storageService.FindByNameAsync(model.Name);
 
+
+                var containerSasUri = storageService.GenerateContainerSasUri();
+
                 var documentTranslationRequestModel = new RequestModel
                 {
                     Inputs = new BatchInput[]
@@ -64,14 +67,21 @@ namespace Sample.Azure.Translator.Webapp.Controllers
                         {
                              Source = new SourceInput
                              {
-                                SourceUrl = storageService.GenerateSasUri(model.Name),
+                                SourceUrl = storageService.GenerateBlobSasUri(model.Name),
+                                StorageSource = StorageSources.AzureBlob,
+                                //Filter= new Filter
+                                //{
+                                //    Prefix = "sample 2020",
+                                //    Suffix = ".html",
+                                //},
                                 Language = model.CriteriaLanguage,
                              },
                              StorageType =  StorageInputTypes.File,
                              Targets = model.TargetLanguages.Select(language => new TargetInput
                              {
-                                 Language =language,
-                                 TargetUrl =storageService.GenerateSasUri(documentNamingStrategy.GetTranslatedDocumentName(result.Uri,language)),
+                                 TargetUrl = storageService.GenerateBlobSasUri(documentNamingStrategy.GetTranslatedDocumentName(model.Name,language)),
+                                 Language = language,
+                                 StorageSource = StorageSources.AzureBlob,                                 
                              }),
                         },
                     },
@@ -99,9 +109,14 @@ namespace Sample.Azure.Translator.Webapp.Controllers
         {
             try
             {
-                await documentTranslationService.GetJobStatusAsync(id);
+                var result = await documentTranslationService.GetJobStatusAsync(id);
 
-                return StatusCode(HttpStatusCode.OK, id);
+                if(result == null)
+                {
+                    return StatusCode((int)HttpStatusCode.NotFound);
+                }
+
+                return StatusCode(HttpStatusCode.OK, result);
             }
             catch (ApiException ex)
             {
