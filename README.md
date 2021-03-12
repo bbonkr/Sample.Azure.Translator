@@ -17,7 +17,8 @@ Edit src\Sample.Azure.Translator.App\appsettings.json file.
   "Translator": {
     "Endpoint": "endpoint here",
     "SubscriptionKey": "subscription key here",
-    "Region": "region here"
+    "Region": "region here",
+    "ResourceName": "name of resource"
   },
   "Logging": {
     "LogLevel": {
