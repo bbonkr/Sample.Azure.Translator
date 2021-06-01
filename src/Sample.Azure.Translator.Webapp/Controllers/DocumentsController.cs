@@ -13,6 +13,8 @@ using kr.bbon.Azure.Translator.Services;
 using kr.bbon.Azure.Translator.Services.Models;
 using kr.bbon.Azure.Translator.Services.Models.AzureStorage.Blob;
 using Sample.Azure.Translator.Webapp.Models.Documents;
+using kr.bbon.AspNetCore.Filters;
+using kr.bbon.AspNetCore;
 
 namespace Sample.Azure.Translator.Webapp.Controllers
 {
@@ -21,8 +23,9 @@ namespace Sample.Azure.Translator.Webapp.Controllers
     /// </summary>
     [ApiVersion("1.0")]
     [ApiController]
-    [Area("api")]
-    [Route("[area]/v{version:apiVersion}/[controller]")]
+    [Area(DefaultValues.AreaName)]
+    [Route(DefaultValues.RouteTemplate)]
+    [ApiExceptionHandlerFilter]
     public class DocumentsController : ApiControllerBase
     {
         public DocumentsController(
