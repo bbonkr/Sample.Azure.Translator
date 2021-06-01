@@ -14,6 +14,8 @@ using kr.bbon.Azure.Translator.Services.Models;
 using kr.bbon.Azure.Translator.Services.Models.DocumentTranslation.TranslationRequest;
 using kr.bbon.Azure.Translator.Services.Strategies;
 using Sample.Azure.Translator.Webapp.Models.DocumentTranslations;
+using kr.bbon.AspNetCore;
+using kr.bbon.AspNetCore.Filters;
 
 namespace Sample.Azure.Translator.Webapp.Controllers
 {
@@ -22,8 +24,9 @@ namespace Sample.Azure.Translator.Webapp.Controllers
     /// </summary>
     [ApiVersion("1.0")]
     [ApiController]
-    [Area("api")]
-    [Route("[area]/v{version:apiVersion}/[controller]")]
+    [Area(DefaultValues.AreaName)]
+    [Route(DefaultValues.RouteTemplate)]
+    [ApiExceptionHandlerFilter]
     public class DocumentTranslationsController: ApiControllerBase
     {
         public DocumentTranslationsController(
@@ -39,6 +42,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
         }
 
         [HttpPost]
+        [Produces(typeof(kr.bbon.Azure.Translator.Services.Models.DocumentTranslation.TranslationRequest.ResponseModel))]
         public async Task<IActionResult> TranslateAsync(TranslateRequestModel model)
         {
             var message = "";
@@ -105,6 +109,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
 
         [HttpGet]
         [Route("{id}")]
+        [Produces(typeof(kr.bbon.Azure.Translator.Services.Models.DocumentTranslation.GetJobStatus.JobStatusResponseModel))]
         public async Task<IActionResult> GetTranslationJobStatusAsync(string id)
         {
             try
