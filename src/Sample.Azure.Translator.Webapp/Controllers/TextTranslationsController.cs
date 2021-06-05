@@ -11,7 +11,7 @@ using System.Collections.Generic;
 
 namespace Sample.Azure.Translator.Webapp.Controllers
 {
-    [ApiVersion("1.1")]
+    [ApiVersion("1.0")]
     [ApiController]
     [Area(DefaultValues.AreaName)]
     [Route(DefaultValues.RouteTemplate)]
@@ -25,8 +25,8 @@ namespace Sample.Azure.Translator.Webapp.Controllers
 
         
         [HttpPost]
-        [Produces(typeof(IEnumerable<kr.bbon.Azure.Translator.Services.Models.TextTranslation.TranslationRequest.ResponseModel>))]
-        public async Task<IActionResult> Translate(RequestModel model)
+        [Produces(typeof(IEnumerable<TextTranslationResponseModel>))]
+        public async Task<IActionResult> Translate(TextTranslationRequestModel model)
         {
             var result = await translatorService.TranslateAsync(model);
 
