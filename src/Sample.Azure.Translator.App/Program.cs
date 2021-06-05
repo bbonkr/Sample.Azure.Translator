@@ -106,7 +106,7 @@ namespace Sample.Azure.Translator.App
 
             var translatorService = host.Services.GetRequiredService<ITextTranslatorService>();
 
-            var source = new RequestModel
+            var source = new TextTranslationRequestModel
             {
                 Inputs = new Input[]
                 {
@@ -175,9 +175,9 @@ namespace Sample.Azure.Translator.App
             {
                 var configuration = _.Configuration;
 
-                services.AddOptions<AzureTranslatorConnectionOptions>().Configure(options =>
+                services.AddOptions<AzureTranslatorOptions>().Configure(options =>
                 {
-                    configuration.GetSection(AzureTranslatorConnectionOptions.Name).Bind(options);
+                    configuration.GetSection(AzureTranslatorOptions.Name).Bind(options);
                 });
 
                 ConfigureServices(services);

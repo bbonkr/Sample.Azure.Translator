@@ -37,14 +37,8 @@ namespace Sample.Azure.Translator.Webapp
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<AppOptions>(Configuration.GetSection(AppOptions.Name));
-            services.Configure<AzureTranslatorConnectionOptions>(Configuration.GetSection(AzureTranslatorConnectionOptions.Name));
-            services.Configure<AzureStorageOptions>(Configuration.GetSection(AzureStorageOptions.Name));            
 
-            services.AddTransient<IStorageService<TranslateAzureBlobStorageContainer>, AzureBlobStorageService<TranslateAzureBlobStorageContainer>>();
-            services.AddTransient<ITextTranslatorService, TextTranslatorService>();
-            services.AddTransient<IDocumentTranslationService, DocumentTranslationService>();
-
-            services.AddTransient<ITranslatedDocumentNamingStrategy, TranslatedDocumentNamingStrategy>();
+            services.AddAzureTranslatorServices(Configuration);
 
             var defaultVersion = new ApiVersion(1, 0);     
 

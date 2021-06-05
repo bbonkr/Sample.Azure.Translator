@@ -16,6 +16,7 @@ using kr.bbon.Azure.Translator.Services.Strategies;
 using Sample.Azure.Translator.Webapp.Models.DocumentTranslations;
 using kr.bbon.AspNetCore;
 using kr.bbon.AspNetCore.Filters;
+using kr.bbon.Azure.Translator.Services.Models.DocumentTranslation.GetJobStatus;
 
 namespace Sample.Azure.Translator.Webapp.Controllers
 {
@@ -30,7 +31,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
     public class DocumentTranslationsController: ApiControllerBase
     {
         public DocumentTranslationsController(
-            IStorageService<TranslateAzureBlobStorageContainer> storageService,
+            IStorageService storageService,
             IDocumentTranslationService documentTranslationService,
             ITranslatedDocumentNamingStrategy documentNamingStrategy,
             ILoggerFactory loggerFactory)
@@ -42,7 +43,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
         }
 
         [HttpPost]
-        [Produces(typeof(kr.bbon.Azure.Translator.Services.Models.DocumentTranslation.TranslationRequest.ResponseModel))]
+        [Produces(typeof(DocumentTranslationResponseModel))]
         public async Task<IActionResult> TranslateAsync(TranslateRequestModel model)
         {
             var message = "";
@@ -63,7 +64,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
 
                 var containerSasUri = storageService.GenerateContainerSasUri();
 
-                var documentTranslationRequestModel = new RequestModel
+                var documentTranslationRequestModel = new DocumentTranslationRequestModel
                 {
                     Inputs = new BatchInput[]
                     {
@@ -109,7 +110,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        [Produces(typeof(kr.bbon.Azure.Translator.Services.Models.DocumentTranslation.GetJobStatus.JobStatusResponseModel))]
+        [Produces(typeof(DocumentTranslationJobStatusResponseModel))]
         public async Task<IActionResult> GetTranslationJobStatusAsync(string id)
         {
             try
@@ -135,7 +136,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
             }
         }
 
-        private readonly IStorageService<TranslateAzureBlobStorageContainer> storageService;
+        private readonly IStorageService storageService;
         private readonly IDocumentTranslationService documentTranslationService;
         private readonly ITranslatedDocumentNamingStrategy documentNamingStrategy;
         private readonly ILogger logger;

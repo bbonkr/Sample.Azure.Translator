@@ -29,7 +29,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
     public class DocumentsController : ApiControllerBase
     {
         public DocumentsController(
-            IStorageService<TranslateAzureBlobStorageContainer> storageService,
+            IStorageService storageService,
             ILoggerFactory loggerFactory)
         {
             this.storageService = storageService;
@@ -138,7 +138,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
             }
         }
 
-        private readonly IStorageService<TranslateAzureBlobStorageContainer> storageService;
+        private readonly IStorageService storageService;
         private readonly ILogger logger;
     }
 }
