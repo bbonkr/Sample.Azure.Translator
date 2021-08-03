@@ -74,6 +74,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
                              {
                                 SourceUrl = storageService.GenerateBlobSasUri(model.Name),
                                 StorageSource = StorageSources.AzureBlob,
+                                
                                 //Filter= new Filter
                                 //{
                                 //    Prefix = "sample 2020",
