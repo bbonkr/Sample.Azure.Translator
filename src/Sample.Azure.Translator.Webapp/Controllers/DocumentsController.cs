@@ -15,6 +15,7 @@ using kr.bbon.Azure.Translator.Services.Models.AzureStorage.Blob;
 using Sample.Azure.Translator.Webapp.Models.Documents;
 using kr.bbon.AspNetCore.Filters;
 using kr.bbon.AspNetCore;
+using Microsoft.Extensions.Options;
 
 namespace Sample.Azure.Translator.Webapp.Controllers
 {
@@ -30,9 +31,11 @@ namespace Sample.Azure.Translator.Webapp.Controllers
     {
         public DocumentsController(
             IStorageService storageService,
+            IOptionsMonitor<AzureTranslatorOptions> azureTranslatorConnectionOptionsAccessor,
             ILoggerFactory loggerFactory)
         {
             this.storageService = storageService;
+            azureTranslatorOptions = azureTranslatorConnectionOptionsAccessor.CurrentValue;
             logger = loggerFactory.CreateLogger<DocumentsController>();
         }
 
@@ -43,7 +46,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
         {
             try
             {
-                var result = await storageService.FindByNameAsync(name);
+                var result = await storageService.FindByNameAsync(azureTranslatorOptions.SourceBlobContainerName, name);
 
                 return StatusCode(HttpStatusCode.OK, result);
             }
@@ -73,7 +76,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
                     {
                         using (var stream = file.OpenReadStream())
                         {
-                            var result = await storageService.CreateAsync(file.FileName, stream, file.ContentType);
+                            var result = await storageService.CreateAsync(azureTranslatorOptions.SourceBlobContainerName, file.FileName, stream, file.ContentType);
                             resultSet.Add(result);
                         }
                     }
@@ -93,7 +96,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
                         });
                     }
 
-                    var result = await storageService.CreateAsync(model.Name, model.Contents, model.ContentType);
+                    var result = await storageService.CreateAsync(azureTranslatorOptions.SourceBlobContainerName, model.Name, model.Contents, model.ContentType);
                     resultSet.Add(result);
                 }
 
@@ -117,7 +120,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
         {
             try
             {
-                var result = await storageService.DeleteAsync(name);
+                var result = await storageService.DeleteAsync(azureTranslatorOptions.SourceBlobContainerName, name);
 
                 if (!result)
                 {
@@ -139,6 +142,7 @@ namespace Sample.Azure.Translator.Webapp.Controllers
         }
 
         private readonly IStorageService storageService;
+        private readonly AzureTranslatorOptions azureTranslatorOptions;
         private readonly ILogger logger;
     }
 }
