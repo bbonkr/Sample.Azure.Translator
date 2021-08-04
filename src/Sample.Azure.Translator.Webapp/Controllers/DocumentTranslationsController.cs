@@ -17,6 +17,7 @@ using Sample.Azure.Translator.Webapp.Models.DocumentTranslations;
 using kr.bbon.AspNetCore;
 using kr.bbon.AspNetCore.Filters;
 using kr.bbon.Azure.Translator.Services.Models.DocumentTranslation.GetJobStatus;
+using Azure.Storage.Sas;
 
 namespace Sample.Azure.Translator.Webapp.Controllers
 {
@@ -59,10 +60,15 @@ namespace Sample.Azure.Translator.Webapp.Controllers
                     });
                 }
 
-                var result = await storageService.FindByNameAsync(model.Name);
+                //var result = await storageService.FindByNameAsync(model.Name);
 
 
-                var containerSasUri = storageService.GenerateContainerSasUri();
+                //var containerSasUri = storageService.GenerateContainerSasUri();
+
+                var nameTokens = model.Name.Split('.');
+                var namePart = string.Join(".", nameTokens.Take(nameTokens.Length - 1));
+
+                var containerSasUri = "https://chtranslatorstroage.blob.core.windows.net/document-translation?sp=rwl&st=2021-08-03T07:46:05Z&se=2021-08-03T15:46:05Z&spr=https&sv=2020-08-04&sr=c&sig=D8uNMCPgOpEN9AGG6d%2BCS1TOAnEhXON1NNliUtpM174%3D";
 
                 var documentTranslationRequestModel = new DocumentTranslationRequestModel
                 {
@@ -72,22 +78,29 @@ namespace Sample.Azure.Translator.Webapp.Controllers
                         {
                              Source = new SourceInput
                              {
-                                SourceUrl = storageService.GenerateBlobSasUri(model.Name),
+                                //SourceUrl = storageService.GenerateBlobSasUri(model.Name, BlobSasPermissions.List | BlobSasPermissions.Read, DateTimeOffset.UtcNow + TimeSpan.FromDays(3)),
+                                //SourceUrl = storageService.GenerateContainerSasUri(BlobContainerSasPermissions.All, DateTimeOffset.UtcNow + TimeSpan.FromDays(3)),
+                                SourceUrl = containerSasUri ,
                                 StorageSource = StorageSources.AzureBlob,
-                                
-                                //Filter= new Filter
-                                //{
-                                //    Prefix = "sample 2020",
-                                //    Suffix = ".html",
-                                //},
+
+                                Filter= new Filter
+                                {
+                                    //Prefix = namePart,
+                                    //Suffix = ".html",
+                                    Suffix=model.Name,
+                                },
                                 Language = model.CriteriaLanguage,
                              },
-                             StorageType =  StorageInputTypes.File,
+                             //StorageType =  StorageInputTypes.File,
+                             StorageType =  StorageInputTypes.Folder,
                              Targets = model.TargetLanguages.Select(language => new TargetInput
                              {
-                                 TargetUrl = storageService.GenerateBlobSasUri(documentNamingStrategy.GetTranslatedDocumentName(model.Name,language)),
+                                 //TargetUrl = storageService.GenerateBlobSasUri(documentNamingStrategy.GetTranslatedDocumentName(model.Name,language), BlobSasPermissions.List | BlobSasPermissions.Write | BlobSasPermissions.Create , DateTimeOffset.UtcNow + TimeSpan.FromDays(3)),
+                                 //TargetUrl = storageService.GenerateContainerSasUri(BlobContainerSasPermissions.All, DateTimeOffset.UtcNow + TimeSpan.FromDays(3)),
+                                 //TargetUrl="https://chtranslatorstroage.blob.core.windows.net/document-translation?sp=rw&st=2021-08-03T07:46:05Z&se=2021-08-03T15:46:05Z&spr=https&sv=2020-08-04&sr=c&sig=7%2FxohLKKDT2qywxgiFgpqVGdMXOm7lo5opITh1V2Vr4%3D",
+                                 TargetUrl = containerSasUri,
                                  Language = language,
-                                 StorageSource = StorageSources.AzureBlob,                                 
+                                 StorageSource = StorageSources.AzureBlob,
                              }),
                         },
                     },
